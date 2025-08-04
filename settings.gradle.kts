@@ -14,4 +14,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "noctua-analytics-kmp"
-include(":library")
+include(":sdk")

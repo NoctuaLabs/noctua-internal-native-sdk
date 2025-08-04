@@ -113,11 +113,11 @@ mavenPublishing {
 
 //    signAllPublications()
 
-    coordinates(group.toString(), "library", version.toString())
+    coordinates(group.toString(), "sdk", version.toString())
 
     pom {
         name = "Noctua Analytics"
-        description = "Noctua Analytics Library"
+        description = "Noctua Analytics SDK"
         inceptionYear = "2025"
         url = "https://github.com/kotlin/multiplatform-library-template/"
         licenses {
