@@ -1,8 +1,8 @@
-package gg.noctua.analytics.utils
+package gg.noctua.internal.utils
 
 sealed interface Result<out D, out E: Error> {
     data class Success<out D>(val data: D): Result<D, Nothing>
-    data class Error<out E: gg.noctua.analytics.utils.Error>(val error: E):
+    data class Error<out E: gg.noctua.internal.utils.Error>(val error: E):
         Result<Nothing, E>
 }
 

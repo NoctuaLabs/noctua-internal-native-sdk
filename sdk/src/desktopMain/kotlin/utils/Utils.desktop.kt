@@ -1,3 +1,13 @@
-package gg.noctua.analytics.utils
+package gg.noctua.internal.utils
+
+import gg.noctua.internal.data.models.NoctuaConfig
+import kotlinx.serialization.json.Json
+import java.io.File
 
 actual object AppContext
+
+actual fun loadAppConfig(): NoctuaConfig {
+    val file = File("src/jvmMain/resources/noctuagg.json")
+    val json = file.readText()
+    return Json.decodeFromString<NoctuaConfig>(json)
+}

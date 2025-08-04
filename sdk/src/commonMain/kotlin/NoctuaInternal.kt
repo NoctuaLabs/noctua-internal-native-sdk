@@ -1,10 +1,10 @@
-package gg.noctua.analytics
+package gg.noctua.internal
 
-import gg.noctua.analytics.presenter.NoctuaAnalyticsPresenter
+import gg.noctua.internal.presenter.NoctuaInternalPresenter
 
-object NoctuaAnalytics {
+object NoctuaInternal {
 
-    private val presenter = NoctuaAnalyticsPresenter()
+    private val presenter = NoctuaInternalPresenter()
 
     fun init() {
         presenter.init()

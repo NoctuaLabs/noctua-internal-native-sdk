@@ -1,10 +1,11 @@
-package gg.noctua.analytics.data.remote
+package gg.noctua.internal.data.remote
 
-import gg.noctua.analytics.data.models.EventResponse
-import gg.noctua.analytics.utils.Constants
-import gg.noctua.analytics.utils.DataError
-import gg.noctua.analytics.utils.DeviceUtils
-import gg.noctua.analytics.utils.Result
+import gg.noctua.internal.data.models.EventResponse
+import gg.noctua.internal.data.models.NoctuaConfig
+import gg.noctua.internal.utils.Constants
+import gg.noctua.internal.utils.DataError
+import gg.noctua.internal.utils.DeviceUtils
+import gg.noctua.internal.utils.Result
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -13,10 +14,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 
-internal class KtorRemoteNoctuaAnalytics (
+internal class KtorRemoteNoctuaInternal (
     private val httpClient: HttpClient,
-    private val deviceUtils: DeviceUtils
-): RemoteNoctuaAnalytics {
+    private val deviceUtils: DeviceUtils,
+    private val noctuaConfig: NoctuaConfig
+): RemoteNoctuaInternal {
 
     override suspend fun sendEvents(events: List<String>): Result<EventResponse, DataError.Remote> {
 
@@ -31,7 +33,7 @@ internal class KtorRemoteNoctuaAnalytics (
                 contentType(ContentType.parse("application/x-ndjson"))
 
                 header("Accept-Language", deviceUtils.acceptLanguage)
-                header("X-CLIENT-ID", Constants.CLIENT_ID)
+                header("X-CLIENT-ID", noctuaConfig.clientId)
                 header("X-BUNDLE-ID", deviceUtils.bundleId)
                 header("X-LANGUAGE", deviceUtils.language)
                 header("X-COUNTRY", deviceUtils.country)

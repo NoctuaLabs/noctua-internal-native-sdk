@@ -1,4 +1,4 @@
-package gg.noctua.analytics.utils
+package gg.noctua.internal.utils
 
 sealed interface DataError: Error {
     enum class Remote: DataError {

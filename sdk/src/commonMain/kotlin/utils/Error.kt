@@ -1,3 +1,3 @@
-package gg.noctua.analytics.utils
+package gg.noctua.internal.utils
 
 interface Error

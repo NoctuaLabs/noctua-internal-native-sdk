@@ -1,7 +1,7 @@
-package gg.noctua.analytics.data.remote
+package gg.noctua.internal.data.remote
 
-import gg.noctua.analytics.utils.DataError
-import gg.noctua.analytics.utils.Result
+import gg.noctua.internal.utils.DataError
+import gg.noctua.internal.utils.Result
 import io.ktor.client.call.NoTransformationFoundException
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException

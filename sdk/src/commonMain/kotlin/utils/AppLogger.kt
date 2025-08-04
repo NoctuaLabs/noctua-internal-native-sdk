@@ -1,4 +1,4 @@
-package gg.noctua.analytics.utils
+package gg.noctua.internal.utils
 
 expect object AppLogger {
     fun e(tag: String, message: String, throwable: Throwable? = null)

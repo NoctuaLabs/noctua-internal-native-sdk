@@ -17,11 +17,13 @@ plugins {
 
 }
 
-group = "gg.noctua.analytics"
-version = "1.0.0"
+val sdkVersion = File("version.txt").readText().trim()
+
+group = "gg.noctua.internal"
+version = sdkVersion
 
 kotlin {
-    val sdkBaseName = "NoctuaAnalytics"
+    val sdkBaseName = "NoctuaInternal"
     val xcf = XCFramework(sdkBaseName)
 
     androidTarget {
@@ -39,7 +41,7 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = sdkBaseName
-            freeCompilerArgs = listOf("-Xbinary=bundleId=gg.noctua.analytics")
+            freeCompilerArgs = listOf("-Xbinary=bundleId=gg.noctua.internal")
             isStatic = true
             xcf.add(this)
         }
@@ -95,7 +97,7 @@ kotlin {
 }
 
 android {
-    namespace = "gg.noctua.analytics"
+    namespace = "gg.noctua.internal"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
@@ -113,31 +115,31 @@ mavenPublishing {
 
 //    signAllPublications()
 
-    coordinates(group.toString(), "sdk", version.toString())
+    coordinates(group.toString(), "sdk", sdkVersion)
 
     pom {
-        name = "Noctua Analytics"
-        description = "Noctua Analytics SDK"
+        name = "Noctua Internal"
+        description = "Noctua Internal SDK"
         inceptionYear = "2025"
         url = "https://github.com/kotlin/multiplatform-library-template/"
         licenses {
             license {
-                name = "XXX"
-                url = "YYY"
-                distribution = "ZZZ"
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         }
         developers {
             developer {
-                id = "XXX"
+                id = "noctualabs"
                 name = "NoctuaLabs"
-                url = "ZZZ"
+                url = "https://github.com/NoctuaLabs"
             }
         }
         scm {
-            url = "XXX"
-            connection = "YYY"
-            developerConnection = "ZZZ"
+            url = "https://github.com/NoctuaLabs/noctua-internal-native-sdk"
+            connection = "scm:git:git://github.com/noctualabs/noctua-internal-native-sdk"
+            developerConnection = "scm:git:ssh://git@github.com:NoctuaLabs/noctua-internal-native-sdk.git"
         }
     }
 }
