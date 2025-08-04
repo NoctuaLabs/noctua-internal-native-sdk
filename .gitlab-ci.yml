@@ -1,0 +1,119 @@
+stages:
+  - test
+  - bump-version
+  - deploy
+  - release
+  - publish
+
+.bump-version:
+  image :
+    name: alpine/git
+    entrypoint: [""]
+  before_script:
+    - apk add git-cliff
+    - git config --global user.email "gitlab-ci@noctua.gg"
+    - git config --global user.name "Noctua Gitlab CI"
+
+test-android-sdk:
+  image: cimg/android:2024.07.1
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+      changes:
+        - sdk/**
+      when: always
+  script:
+    - ./gradlew check
+
+bump-version-android-sdk:
+  extends: .bump-version
+  stage: bump-version
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - sdk/**
+      when: always
+  variables:
+    GIT_STRATEGY: fetch # reuse workspace
+    GIT_DEPTH: 0 # avoid shallow clone to give cliff all the info it needs
+  script:
+    - NEW_VERSION_TAG=$(git-cliff --repository ".." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bumped-version)
+    - echo $NEW_VERSION_TAG | sed -r "s/android-sdk-v(.*)/\1/" > version.txt
+    - if [ -n "$(git diff --name-only HEAD -- ./version.txt)" ]; then
+      echo "Bumping version for next release";
+      git add version.txt;
+      git commit -m "bump version to $(cat version.txt) [skip ci]";
+      git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip;
+      else
+      echo "No version bump required";
+      fi
+
+deploy-android-sdk:
+  image: cimg/android:2024.07.1
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - sdk/**
+      when: on_success
+      needs:
+        - bump-version-android-sdk
+  script:
+    - git checkout $CI_COMMIT_BRANCH
+    - ./gradlew :sdk:publishMavenPublicationToGitLabRepository
+
+release-android-sdk:
+  extends: .bump-version
+  stage: release
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - sdk/**
+      when: manual
+      needs:
+        - deploy-android-sdk
+  variables:
+    GIT_STRATEGY: fetch # reuse workspace
+    GIT_DEPTH: 0 # avoid shallow clone to give cliff all the info it needs
+  script:
+    - git fetch --tags
+    - git checkout origin/$CI_COMMIT_BRANCH
+    - NEW_VERSION_TAG=$(git-cliff --repository ".." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bumped-version)
+    - echo $NEW_VERSION_TAG | sed -r "s/android-sdk-v(.*)/\1/" > version.txt
+    - git add version.txt
+    - git-cliff --repository ".." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bump > CHANGELOG.md
+    - git add CHANGELOG.md
+    - git commit -m "Release $NEW_VERSION_TAG"
+    - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
+    - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
+
+publish-android-sdk:
+  image: cimg/android:2024.07.1
+  stage: publish
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - sdk/**
+      when: on_success
+      needs:
+        - release-android-sdk
+  variables:
+    GIT_STRATEGY: fetch # reuse workspace
+    GIT_DEPTH: 0 # avoid shallow clone to give cliff all the info it needs
+  script:
+    - git fetch --tags
+    - git checkout origin/$CI_COMMIT_BRANCH
+    - ./gradlew :sdk:publishAndReleaseToMavenCentral
+    - wget "https://github.com/orhun/git-cliff/releases/download/v2.4.0/git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz"
+    - tar -xvf git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz
+    - cp ./git-cliff-2.4.0/git-cliff /usr/local/bin/
+    - chmod +x /usr/local/bin/git-cliff
+    - git-cliff --repository ".." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --latest > GithubRelease.md
+    - curl -sS https://webi.sh/gh | sh
+    - source ~/.config/envman/PATH.env
+    - NEW_VERSION_TAG="android-sdk-v$(cat version.txt)"
+    - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
+    - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
+    - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
+    - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar"
+    - git remote remove github

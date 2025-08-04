@@ -110,10 +110,26 @@ android {
     }
 }
 
+publishing {
+    repositories {
+        maven {
+            name = "GitLab"
+            url = uri("https://gitlab.com/api/v4/projects/59492250/packages/maven")
+            credentials(HttpHeaderCredentials::class) {
+                name = "Job-Token"
+                value = System.getenv("CI_JOB_TOKEN")
+            }
+            authentication {
+                create<HttpHeaderAuthentication>("header")
+            }
+        }
+    }
+}
+
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
-//    signAllPublications()
+    signAllPublications()
 
     coordinates(group.toString(), "sdk", sdkVersion)
 
@@ -121,7 +137,7 @@ mavenPublishing {
         name = "Noctua Internal"
         description = "Noctua Internal SDK"
         inceptionYear = "2025"
-        url = "https://github.com/kotlin/multiplatform-library-template/"
+        url = "https://github.com/NoctuaLabs/noctua-internal-native-sdk"
         licenses {
             license {
                 name = "The Apache License, Version 2.0"

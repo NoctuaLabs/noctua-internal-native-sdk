@@ -69,7 +69,6 @@ internal class NoctuaInternalPresenter {
         eventPayload.putAll(additionalParams(deviceUtils, noctuaConfig))
         eventPayload.putAll(properties)
 
-        //Unsupported type: class java.util.Date
         val propertiesToJson = mapToJsonString(eventPayload)
 
         scope.launch {
