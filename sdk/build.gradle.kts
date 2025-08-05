@@ -1,3 +1,4 @@
+import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -114,7 +115,7 @@ publishing {
     repositories {
         maven {
             name = "GitLab"
-            url = uri("https://gitlab.com/api/v4/projects/59492250/packages/maven")
+            url = uri("https://gitlab.com/api/v4/projects/72300320/packages/maven")
             credentials(HttpHeaderCredentials::class) {
                 name = "Job-Token"
                 value = System.getenv("CI_JOB_TOKEN")
@@ -127,11 +128,20 @@ publishing {
 }
 
 mavenPublishing {
+
+    coordinates(group.toString(), "sdk", sdkVersion)
+
+    configure(
+        AndroidSingleVariantLibrary(
+            variant = "release",
+            sourcesJar = true,
+            publishJavadocJar = true
+        )
+    )
+
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
     signAllPublications()
-
-    coordinates(group.toString(), "sdk", sdkVersion)
 
     pom {
         name = "Noctua Internal"
