@@ -53,7 +53,7 @@ fun mapToJsonString(map: Map<String, Any>): String {
 fun additionalParams(deviceUtils: DeviceUtils, noctuaConfig: NoctuaConfig): Map<String, Any> {
     val eventPayload = mutableMapOf<String, Any>(
         "event_version" to 1,
-        "sdk_version" to "0.1.0",
+        "sdk_version" to Constants.SDK_VERSION,
         "device_id" to deviceUtils.deviceId,
         "device_os_version" to deviceUtils.osAgent,
         "device_os" to deviceUtils.platform,
