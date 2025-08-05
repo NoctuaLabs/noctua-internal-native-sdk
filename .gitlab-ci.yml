@@ -24,7 +24,7 @@ test-android-sdk:
       when: always
   script:
     - git update-index --chmod=+x gradlew
-    - ./gradlew check
+    - bash gradlew check
 
 bump-version-android-sdk:
   extends: .bump-version
@@ -61,8 +61,7 @@ deploy-android-sdk:
         - bump-version-android-sdk
   script:
     - git checkout $CI_COMMIT_BRANCH
-    - git update-index --chmod=+x gradlew
-    - ./gradlew :sdk:publishMavenPublicationToGitLabRepository
+    - bash gradlew :sdk:publishMavenPublicationToGitLabRepository
 
 release-android-sdk:
   extends: .bump-version
@@ -105,8 +104,7 @@ publish-android-sdk:
   script:
     - git fetch --tags
     - git checkout origin/$CI_COMMIT_BRANCH
-    - git update-index --chmod=+x gradlew
-    - ./gradlew :sdk:publishAndReleaseToMavenCentral
+    - bash gradlew :sdk:publishAndReleaseToMavenCentral
     - wget "https://github.com/orhun/git-cliff/releases/download/v2.4.0/git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz"
     - tar -xvf git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz
     - cp ./git-cliff-2.4.0/git-cliff /usr/local/bin/
