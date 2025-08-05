@@ -1,8 +1,8 @@
-package gg.noctua.internal.data.remote
+package com.noctuagames.internal.sdk.data.remote
 
-import gg.noctua.internal.data.models.EventResponse
-import gg.noctua.internal.utils.DataError
-import gg.noctua.internal.utils.Result
+import com.noctuagames.internal.sdk.data.models.EventResponse
+import com.noctuagames.internal.sdk.utils.DataError
+import com.noctuagames.internal.sdk.utils.Result
 
 internal interface RemoteNoctuaInternal {
     suspend fun sendEvents(events: List<String>) : Result<EventResponse, DataError.Remote>

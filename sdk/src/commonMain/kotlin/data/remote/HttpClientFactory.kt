@@ -1,7 +1,7 @@
-package gg.noctua.internal.data.remote
+package com.noctuagames.internal.sdk.data.remote
 
-import gg.noctua.internal.utils.AppLogger
-import gg.noctua.internal.utils.Constants
+import com.noctuagames.internal.sdk.utils.AppLogger
+import com.noctuagames.internal.sdk.utils.Constants
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation

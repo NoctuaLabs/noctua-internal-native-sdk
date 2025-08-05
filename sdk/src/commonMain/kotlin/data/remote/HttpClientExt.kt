@@ -1,7 +1,7 @@
-package gg.noctua.internal.data.remote
+package com.noctuagames.internal.sdk.data.remote
 
-import gg.noctua.internal.utils.DataError
-import gg.noctua.internal.utils.Result
+import com.noctuagames.internal.sdk.utils.DataError
+import com.noctuagames.internal.sdk.utils.Result
 import io.ktor.client.call.NoTransformationFoundException
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException

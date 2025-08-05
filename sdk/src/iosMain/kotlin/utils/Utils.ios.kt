@@ -1,6 +1,6 @@
-package gg.noctua.internal.utils
+package com.noctuagames.internal.sdk.utils
 
-import gg.noctua.internal.data.models.NoctuaConfig
+import com.noctuagames.internal.sdk.data.models.NoctuaConfig
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.serialization.json.Json
 import platform.Foundation.NSBundle

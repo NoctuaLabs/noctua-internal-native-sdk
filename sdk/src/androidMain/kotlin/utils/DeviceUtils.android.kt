@@ -1,4 +1,4 @@
-package gg.noctua.internal.utils
+package com.noctuagames.internal.sdk.utils
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager

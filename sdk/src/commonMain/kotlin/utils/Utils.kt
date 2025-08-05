@@ -1,6 +1,6 @@
-package gg.noctua.internal.utils
+package com.noctuagames.internal.sdk.utils
 
-import gg.noctua.internal.data.models.NoctuaConfig
+import com.noctuagames.internal.sdk.data.models.NoctuaConfig
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
