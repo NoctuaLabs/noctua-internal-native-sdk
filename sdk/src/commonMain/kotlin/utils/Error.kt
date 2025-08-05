@@ -1,3 +1,3 @@
-package gg.noctua.internal.utils
+package com.noctuagames.internal.sdk.utils
 
 interface Error

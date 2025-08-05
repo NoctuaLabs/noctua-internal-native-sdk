@@ -1,4 +1,4 @@
-package gg.noctua.internal.utils
+package com.noctuagames.internal.sdk.utils
 
 expect class DeviceUtils() {
     val platform: String

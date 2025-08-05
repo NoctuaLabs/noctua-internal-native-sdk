@@ -1,5 +1,4 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
-import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
@@ -20,7 +19,7 @@ plugins {
 
 val sdkVersion = File("version.txt").readText().trim()
 
-group = "gg.noctua.internal"
+group = "com.noctuagames.internal.sdk"
 version = sdkVersion
 
 kotlin {
@@ -42,7 +41,7 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = sdkBaseName
-            freeCompilerArgs = listOf("-Xbinary=bundleId=gg.noctua.internal")
+            freeCompilerArgs = listOf("-Xbinary=bundleId=com.noctuagames.internal.sdk")
             isStatic = true
             xcf.add(this)
         }
@@ -98,7 +97,7 @@ kotlin {
 }
 
 android {
-    namespace = "gg.noctua.internal"
+    namespace = "com.noctuagames.internal.sdk"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
@@ -129,7 +128,7 @@ publishing {
 
 mavenPublishing {
 
-    coordinates(group.toString(), "sdk", sdkVersion)
+    coordinates(group.toString(), "native", sdkVersion)
 
     configure(
         AndroidSingleVariantLibrary(
@@ -138,8 +137,6 @@ mavenPublishing {
             publishJavadocJar = true
         )
     )
-
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
     signAllPublications()
 

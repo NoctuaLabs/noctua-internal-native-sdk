@@ -1,4 +1,4 @@
-package gg.noctua.internal.utils
+package com.noctuagames.internal.sdk.utils
 
 object Constants {
     const val CLIENT_ID = "1-e724f5a9e6f1"

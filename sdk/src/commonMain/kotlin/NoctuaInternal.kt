@@ -1,6 +1,6 @@
-package gg.noctua.internal
+package com.noctuagames.internal.sdk
 
-import gg.noctua.internal.presenter.NoctuaInternalPresenter
+import com.noctuagames.internal.sdk.presenter.NoctuaInternalPresenter
 
 object NoctuaInternal {
 
