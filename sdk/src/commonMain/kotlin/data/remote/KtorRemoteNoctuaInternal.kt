@@ -43,7 +43,7 @@ internal class KtorRemoteNoctuaInternal (
                 header("X-PLATFORM", getPlatformType())
                 header("X-OS", deviceUtils.platform)
                 header("X-OS-AGENT", deviceUtils.osAgent)
-                header("X-SDK-VERSION", "1.0.0")
+                header("X-SDK-VERSION", "0.1.0")
 
                 setBody(ndjsonBody)
             }
