@@ -20,3 +20,7 @@ actual  fun loadAppConfig(): NoctuaConfig {
 
     return Json.decodeFromString(NoctuaConfig.serializer(), content)
 }
+
+actual fun getPlatformType(): String {
+    return PlatformType.appstore.name
+}

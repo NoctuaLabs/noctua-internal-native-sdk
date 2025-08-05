@@ -6,6 +6,7 @@ import gg.noctua.internal.utils.Constants
 import gg.noctua.internal.utils.DataError
 import gg.noctua.internal.utils.DeviceUtils
 import gg.noctua.internal.utils.Result
+import gg.noctua.internal.utils.getPlatformType
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -39,7 +40,7 @@ internal class KtorRemoteNoctuaInternal (
                 header("X-COUNTRY", deviceUtils.country)
                 header("X-CURRENCY", deviceUtils.currency)
                 header("X-DEVICE-ID", deviceUtils.deviceId)
-                header("X-PLATFORM", "direct") //example playstore, appstore, direct
+                header("X-PLATFORM", getPlatformType())
                 header("X-OS", deviceUtils.platform)
                 header("X-OS-AGENT", deviceUtils.osAgent)
                 header("X-SDK-VERSION", "1.0.0")

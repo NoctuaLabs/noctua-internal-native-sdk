@@ -1,6 +1,7 @@
 package gg.noctua.internal.utils
 
 import android.content.Context
+import android.os.Build
 import gg.noctua.internal.data.models.NoctuaConfig
 import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
@@ -25,5 +26,22 @@ actual fun loadAppConfig(): NoctuaConfig {
         }
     } catch (e: IOException) {
         throw IllegalArgumentException("Failed to load noctuagg.json", e)
+    }
+}
+
+actual fun getPlatformType(): String {
+    val installer = try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            AppContext.get().packageManager.getInstallSourceInfo(AppContext.get().packageName)
+        } else {
+            AppContext.get().packageManager.getInstallerPackageName(AppContext.get().packageName)
+        }
+    } catch (e: Exception) {
+        throw IllegalArgumentException("Failed to get installer package name", e)
+    }
+
+    return when (installer) {
+        "com.android.vending" -> PlatformType.playstore.name
+        else -> PlatformType.direct.name
     }
 }
