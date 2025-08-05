@@ -11,3 +11,7 @@ actual fun loadAppConfig(): NoctuaConfig {
     val json = file.readText()
     return Json.decodeFromString<NoctuaConfig>(json)
 }
+
+actual fun getPlatformType(): String {
+    return PlatformType.direct.name
+}

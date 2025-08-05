@@ -16,6 +16,12 @@ expect object AppContext
 
 expect fun loadAppConfig(): NoctuaConfig
 
+enum class PlatformType {
+    playstore, appstore, direct
+}
+
+expect fun getPlatformType() : String
+
 @OptIn(ExperimentalTime::class)
 fun getCurrentDateTimestamp(): String {
     val now: Instant = Clock.System.now()
