@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Received status code 403 from server: Forbidden
+- Update device utils
+- Change version to use from constant class
 
 ### 🚜 Refactor
 
