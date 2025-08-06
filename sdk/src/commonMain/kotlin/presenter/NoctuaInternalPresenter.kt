@@ -83,7 +83,7 @@ internal class NoctuaInternalPresenter {
     }
 
     fun trackCustomEventWithRevenue(eventName: String, revenue: Double, currency:String , properties: Map<String, Any>) {
-        
+
     }
 }
 
