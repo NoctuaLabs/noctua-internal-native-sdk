@@ -103,7 +103,7 @@ publish-android-sdk:
   script:
     - git fetch --tags
     - git checkout origin/$CI_COMMIT_BRANCH
-    - bash gradlew :sdk:publishAndroidReleasePublicationToMavenCentralRepository --no-configuration-cache
+    - bash gradlew :sdk:publishMavenPublicationToMavenCentralRepository --no-configuration-cache
     - wget "https://github.com/orhun/git-cliff/releases/download/v2.4.0/git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz"
     - tar -xvf git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz
     - cp ./git-cliff-2.4.0/git-cliff /usr/local/bin/
