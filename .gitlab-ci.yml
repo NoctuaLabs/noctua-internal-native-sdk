@@ -60,7 +60,7 @@ deploy-android-sdk:
         - bump-version-android-sdk
   script:
     - git checkout $CI_COMMIT_BRANCH
-    - bash gradlew :sdk:publishAllPublicationsToGitLabRepository
+    - bash gradlew :sdk:publishAllPublicationsToGitLabRepository --no-configuration-cache
 
 release-android-sdk:
   extends: .bump-version
