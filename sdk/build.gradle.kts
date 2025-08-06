@@ -102,6 +102,9 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+        aarMetadata {
+            minCompileSdk = 32
+        }
     }
 
     compileOptions {
