@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.0] - 2025-08-06
+## [android-sdk-v0.2.0] - 2025-08-06
 
 ### 🚀 Features
 
@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Update device utils
 - Change version to use from constant class
 - Update gradle version and refactor bundle id
+- Gitlab ci
 
 ### 🚜 Refactor
 
