@@ -1,12 +1,12 @@
-package com.noctuagames.internal.sdk.data.remote
+package com.noctuagames.labs.sdk.data.remote
 
-import com.noctuagames.internal.sdk.data.models.EventResponse
-import com.noctuagames.internal.sdk.data.models.NoctuaConfig
-import com.noctuagames.internal.sdk.utils.Constants
-import com.noctuagames.internal.sdk.utils.DataError
-import com.noctuagames.internal.sdk.utils.DeviceUtils
-import com.noctuagames.internal.sdk.utils.Result
-import com.noctuagames.internal.sdk.utils.getPlatformType
+import com.noctuagames.labs.sdk.data.models.EventResponse
+import com.noctuagames.labs.sdk.data.models.NoctuaConfig
+import com.noctuagames.labs.sdk.utils.Constants
+import com.noctuagames.labs.sdk.utils.DataError
+import com.noctuagames.labs.sdk.utils.DeviceUtils
+import com.noctuagames.labs.sdk.utils.Result
+import com.noctuagames.labs.sdk.utils.getPlatformType
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post

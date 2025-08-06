@@ -1,8 +1,8 @@
-package com.noctuagames.internal.sdk.utils
+package com.noctuagames.labs.sdk.utils
 
 sealed interface Result<out D, out E: Error> {
     data class Success<out D>(val data: D): Result<D, Nothing>
-    data class Error<out E: com.noctuagames.internal.sdk.utils.Error>(val error: E):
+    data class Error<out E: com.noctuagames.labs.sdk.utils.Error>(val error: E):
         Result<Nothing, E>
 }
 

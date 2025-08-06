@@ -1,7 +1,7 @@
-package com.noctuagames.internal.sdk.data.remote
+package com.noctuagames.labs.sdk.data.remote
 
-import com.noctuagames.internal.sdk.utils.DataError
-import com.noctuagames.internal.sdk.utils.Result
+import com.noctuagames.labs.sdk.utils.DataError
+import com.noctuagames.labs.sdk.utils.Result
 import io.ktor.client.call.NoTransformationFoundException
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException

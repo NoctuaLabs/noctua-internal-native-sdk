@@ -1,4 +1,4 @@
-package com.noctuagames.internal.sdk.utils
+package com.noctuagames.labs.sdk.utils
 
 sealed interface DataError: Error {
     enum class Remote: DataError {

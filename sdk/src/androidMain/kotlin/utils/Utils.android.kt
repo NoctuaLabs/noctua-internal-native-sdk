@@ -1,8 +1,8 @@
-package com.noctuagames.internal.sdk.utils
+package com.noctuagames.labs.sdk.utils
 
 import android.content.Context
 import android.os.Build
-import com.noctuagames.internal.sdk.data.models.NoctuaConfig
+import com.noctuagames.labs.sdk.data.models.NoctuaConfig
 import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import java.lang.ref.WeakReference

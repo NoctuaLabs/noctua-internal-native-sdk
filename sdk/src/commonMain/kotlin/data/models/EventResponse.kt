@@ -1,4 +1,4 @@
-package com.noctuagames.internal.sdk.data.models
+package com.noctuagames.labs.sdk.data.models
 
 import kotlinx.serialization.Serializable
 

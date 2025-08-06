@@ -1,6 +1,6 @@
-package com.noctuagames.internal.sdk.utils
+package com.noctuagames.labs.sdk.utils
 
-import com.noctuagames.internal.sdk.data.models.NoctuaConfig
+import com.noctuagames.labs.sdk.data.models.NoctuaConfig
 import kotlinx.serialization.json.Json
 import java.io.File
 

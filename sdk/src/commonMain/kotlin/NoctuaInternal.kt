@@ -1,6 +1,6 @@
-package com.noctuagames.internal.sdk
+package com.noctuagames.labs.sdk
 
-import com.noctuagames.internal.sdk.presenter.NoctuaInternalPresenter
+import com.noctuagames.labs.sdk.presenter.NoctuaInternalPresenter
 
 object NoctuaInternal {
 

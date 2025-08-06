@@ -1,17 +1,17 @@
-package com.noctuagames.internal.sdk.presenter
+package com.noctuagames.labs.sdk.presenter
 
-import com.noctuagames.internal.sdk.data.models.NoctuaConfig
-import com.noctuagames.internal.sdk.data.remote.KtorRemoteNoctuaInternal
-import com.noctuagames.internal.sdk.data.remote.RemoteNoctuaInternal
-import com.noctuagames.internal.sdk.utils.AppLogger
-import com.noctuagames.internal.sdk.utils.Constants
-import com.noctuagames.internal.sdk.utils.DeviceUtils
-import com.noctuagames.internal.sdk.data.remote.HttpClientFactory
-import com.noctuagames.internal.sdk.utils.additionalParams
-import com.noctuagames.internal.sdk.utils.loadAppConfig
-import com.noctuagames.internal.sdk.utils.mapToJsonString
-import com.noctuagames.internal.sdk.utils.onError
-import com.noctuagames.internal.sdk.utils.onSuccess
+import com.noctuagames.labs.sdk.data.models.NoctuaConfig
+import com.noctuagames.labs.sdk.data.remote.KtorRemoteNoctuaInternal
+import com.noctuagames.labs.sdk.data.remote.RemoteNoctuaInternal
+import com.noctuagames.labs.sdk.utils.AppLogger
+import com.noctuagames.labs.sdk.utils.Constants
+import com.noctuagames.labs.sdk.utils.DeviceUtils
+import com.noctuagames.labs.sdk.data.remote.HttpClientFactory
+import com.noctuagames.labs.sdk.utils.additionalParams
+import com.noctuagames.labs.sdk.utils.loadAppConfig
+import com.noctuagames.labs.sdk.utils.mapToJsonString
+import com.noctuagames.labs.sdk.utils.onError
+import com.noctuagames.labs.sdk.utils.onSuccess
 import kotlinx.coroutines.*
 
 internal class NoctuaInternalPresenter {

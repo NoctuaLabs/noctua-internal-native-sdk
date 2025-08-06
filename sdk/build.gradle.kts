@@ -19,11 +19,11 @@ plugins {
 
 val sdkVersion = File("version.txt").readText().trim()
 
-group = "com.noctuagames.internal.sdk"
+group = "com.noctuagames.labs.sdk"
 version = sdkVersion
 
 kotlin {
-    val sdkBaseName = "NoctuaInternal"
+    val sdkBaseName = "NoctuaLabs"
     val xcf = XCFramework(sdkBaseName)
 
     androidTarget {
@@ -41,7 +41,7 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = sdkBaseName
-            freeCompilerArgs = listOf("-Xbinary=bundleId=com.noctuagames.internal.sdk")
+            freeCompilerArgs = listOf("-Xbinary=bundleId=com.noctuagames.labs.sdk")
             isStatic = true
             xcf.add(this)
         }
@@ -97,7 +97,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.noctuagames.internal.sdk"
+    namespace = "com.noctuagames.labs.sdk"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
@@ -114,7 +114,7 @@ publishing {
     repositories {
         maven {
             name = "GitLab"
-            url = uri("https://gitlab.com/api/v4/projects/72434935/packages/maven")
+            url = uri("https://gitlab.com/api/v4/projects/72442359/packages/maven")
             credentials(HttpHeaderCredentials::class) {
                 name = "Job-Token"
                 value = System.getenv("CI_JOB_TOKEN")
@@ -141,8 +141,8 @@ mavenPublishing {
     signAllPublications()
 
     pom {
-        name = "Noctua Internal"
-        description = "Noctua Internal SDK"
+        name = "Noctua Labs"
+        description = "Noctua Labs SDK"
         inceptionYear = "2025"
         url = "https://github.com/NoctuaLabs/noctua-internal-native-sdk"
         licenses {

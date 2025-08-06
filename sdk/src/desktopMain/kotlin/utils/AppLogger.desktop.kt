@@ -1,6 +1,6 @@
-package com.noctuagames.internal.sdk.utils
+package com.noctuagames.labs.sdk.utils
 
-import com.noctuagames.internal.sdk.utils.AppLogger
+import com.noctuagames.labs.sdk.utils.AppLogger
 import java.util.logging.Level
 import java.util.logging.Logger
 

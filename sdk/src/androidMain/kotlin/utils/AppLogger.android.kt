@@ -1,4 +1,4 @@
-package com.noctuagames.internal.sdk.utils
+package com.noctuagames.labs.sdk.utils
 
 import android.util.Log
 
