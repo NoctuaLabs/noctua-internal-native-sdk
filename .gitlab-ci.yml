@@ -115,6 +115,5 @@ publish-android-sdk:
     - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
     - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
-    - git push github $NEW_VERSION_TAG
     - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar"
     - git remote remove github
