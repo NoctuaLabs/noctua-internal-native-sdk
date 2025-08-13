@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [android-sdk-v0.3.0] - 2025-08-06
+## [android-sdk-v0.4.0] - 2025-08-13
 
 ### 🚀 Features
 
@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Update gradle version and refactor bundle id
 - Gitlab ci
 - Maven central
+- Kotlin version, compilesdk and agp is too higher
 
 ### 🚜 Refactor
 
