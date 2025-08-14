@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [android-sdk-v0.4.0] - 2025-08-13
+## [android-sdk-v0.5.0] - 2025-08-14
 
 ### 🚀 Features
 
@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Gitlab ci
 - Maven central
 - Kotlin version, compilesdk and agp is too higher
+- Update version sdk
 
 ### 🚜 Refactor
 
