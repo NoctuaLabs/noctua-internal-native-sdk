@@ -28,6 +28,11 @@ fun getCurrentDateTimestamp(): String {
     return now.toString()
 }
 
+@OptIn(ExperimentalTime::class)
+fun getCurrentTimeMillis(): Long {
+    return Clock.System.now().toEpochMilliseconds()
+}
+
 val json = Json { prettyPrint = false }
 
 @OptIn(ExperimentalTime::class)
@@ -35,6 +40,7 @@ fun mapToJsonString(map: Map<String, Any>): String {
     fun toJsonElement(value: Any?): JsonElement = when (value) {
         null -> JsonNull
         is String -> JsonPrimitive(value)
+        is Long -> JsonPrimitive(value)
         is Number -> JsonPrimitive(value)
         is Boolean -> JsonPrimitive(value)
         is Instant -> JsonPrimitive(value.toString())
