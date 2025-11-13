@@ -22,7 +22,10 @@ actual fun loadAppConfig(): NoctuaConfig {
     try {
         AppContext.get().assets.open("noctuagg.json").use {
             val json = it.bufferedReader().use { reader -> reader.readText() }
-            return Json.decodeFromString<NoctuaConfig>(json)
+            val jsonParser = Json {
+                ignoreUnknownKeys = true
+            }
+            return jsonParser.decodeFromString<NoctuaConfig>(json)
         }
     } catch (e: IOException) {
         throw IllegalArgumentException("Failed to load noctuagg.json", e)
