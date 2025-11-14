@@ -8,10 +8,9 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.vanniktech.mavenPublish)
 
-    //Custom Library
     alias(libs.plugins.jetbrains.kotlin.serialization)
-//    alias(libs.plugins.ksp)
-//    alias(libs.plugins.room)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 
     id("maven-publish")
 
@@ -26,9 +25,16 @@ kotlin {
     val sdkBaseName = "NoctuaLabs"
     val xcf = XCFramework(sdkBaseName)
 
+    targets.configureEach {
+        compilations.configureEach {
+            compileTaskProvider.get().compilerOptions {
+                freeCompilerArgs.add("-Xexpect-actual-classes")
+            }
+        }
+    }
+
     androidTarget {
         publishLibraryVariants("release")
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -49,25 +55,28 @@ kotlin {
 
     jvm("desktop")
 
-//    room {
-//        schemaDirectory("$projectDir/schemas")
-//    }
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
 
     sourceSets {
         val desktopMain by getting
 
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
+
         }
 
         commonMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
-//            implementation(libs.androidx.room.runtime)
-//            implementation(libs.sqlite.bundled)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.sqlite.bundled)
             implementation(libs.bundles.ktor)
             implementation(libs.androidx.datastore)
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kotlinx.datetime)
+            api(libs.koin.core)
         }
 
         val commonTest by getting {
@@ -91,7 +100,11 @@ kotlin {
         }
 
         dependencies {
-//            ksp(libs.androidx.room.compiler)
+            add("kspAndroid", libs.androidx.room.compiler)
+            add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+            add("kspIosX64", libs.androidx.room.compiler)
+            add("kspIosArm64", libs.androidx.room.compiler)
+            add("kspDesktop", libs.androidx.room.compiler)
         }
     }
 }

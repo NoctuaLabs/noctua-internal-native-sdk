@@ -3,6 +3,7 @@ package com.noctuagames.labs.sdk.data.remote
 import com.noctuagames.labs.sdk.utils.AppLogger
 import com.noctuagames.labs.sdk.utils.Constants
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -13,8 +14,8 @@ import kotlinx.serialization.json.Json
 
 internal object HttpClientFactory {
 
-    fun create(): HttpClient {
-        return HttpClient {
+    fun create(engine: HttpClientEngine): HttpClient {
+        return HttpClient(engine) {
             install(ContentNegotiation) {
                 json(
                     json = Json {
