@@ -1,8 +1,13 @@
 package com.noctuagames.labs.sdk.utils
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
+import androidx.annotation.RequiresApi
 import com.noctuagames.labs.sdk.data.models.NoctuaConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import java.lang.ref.WeakReference
@@ -37,6 +42,7 @@ actual fun getPlatformType(): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             AppContext.get().packageManager.getInstallSourceInfo(AppContext.get().packageName)
         } else {
+            @Suppress("DEPRECATION")
             AppContext.get().packageManager.getInstallerPackageName(AppContext.get().packageName)
         }
     } catch (e: Exception) {
@@ -47,4 +53,12 @@ actual fun getPlatformType(): String {
         "com.android.vending" -> PlatformType.playstore.name
         else -> PlatformType.direct.name
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.M)
+actual suspend fun isNetworkAvailable(): Boolean = withContext(Dispatchers.IO) {
+    val connectivityManager = AppContext.get().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return@withContext false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return@withContext false
+    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }

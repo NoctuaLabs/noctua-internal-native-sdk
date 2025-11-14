@@ -14,6 +14,8 @@ import kotlin.time.Instant
 
 expect object AppContext
 
+expect suspend fun isNetworkAvailable(): Boolean
+
 expect fun loadAppConfig(): NoctuaConfig
 
 enum class PlatformType {
