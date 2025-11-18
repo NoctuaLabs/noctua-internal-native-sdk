@@ -6,11 +6,19 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.noctuagames.labs.sdk.data.models.NoctuaConfig
+import com.noctuagames.labs.sdk.di.initKoin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
+import org.koin.android.ext.koin.androidContext
 import java.lang.ref.WeakReference
+
+fun initKoinManually(context: Context) {
+    initKoin {
+        androidContext(context)
+    }
+}
 
 actual object AppContext {
     private var value: WeakReference<Context?>? = null
