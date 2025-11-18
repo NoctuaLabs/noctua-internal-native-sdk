@@ -57,7 +57,8 @@ internal class SessionTracker(
             presenter.trackCustomEvent("session_continue", emptyMap())
         } else {
             sessionId = Uuid.random().toString()
-            presenter.trackCustomEvent("session_start", mapOf("session_id" to sessionId!!))
+            ExperimentManager.setSessionId(sessionId!!)
+            presenter.trackCustomEvent("session_start", emptyMap())
         }
     }
 
