@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [android-sdk-v0.7.0] - 2025-11-18
+## [android-sdk-v0.8.0] - 2025-11-18
 
 ### 🚀 Features
 
@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Add session tags for TSPU tracking
 - Add and configure Room and Koin in the project
 - Add function init koin manually
+- Add session id for all events
 
 ### 🐛 Bug Fixes
 
