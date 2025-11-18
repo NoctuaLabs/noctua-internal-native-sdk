@@ -4,7 +4,6 @@ import com.noctuagames.labs.sdk.data.database.DatabaseFactory
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import org.koin.android.ext.koin.androidApplication
-import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
