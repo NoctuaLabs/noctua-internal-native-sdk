@@ -153,6 +153,11 @@ internal class NoctuaInternalPresenter(
             eventPayload["experiment"] = experiment
         }
 
+        val sessionId = ExperimentManager.getSessionId()
+        if (sessionId.isNotEmpty()) {
+            eventPayload["session_id"] = sessionId
+        }
+
         eventPayload.putAll(additionalParams(deviceUtils, noctuaConfig))
         eventPayload.putAll(properties)
 
