@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [android-sdk-v0.8.0] - 2025-11-18
+## [android-sdk-v0.9.0] - 2025-11-27
 
 ### 🚀 Features
 
@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 - Add and configure Room and Koin in the project
 - Add function init koin manually
 - Add session id for all events
+- Reduce server load by batching and sending 101 events per request
+- Add function set session extra params
 
 ### 🐛 Bug Fixes
 
