@@ -158,11 +158,13 @@ internal class NoctuaInternalPresenter(
 
             val localEvents = eventDao.getAll()
             AppLogger.d(Constants.NOCTUA_TAG, "Local events count: ${localEvents.count()}")
+
             if (localEvents.count() > 100) {
                 flushLocalEvents()
-            } else {
-                eventDao.insert(EventEntity(events = propertiesToJson))
+                return@launch
             }
+
+            eventDao.insert(EventEntity(events = propertiesToJson))
         }
     }
 
