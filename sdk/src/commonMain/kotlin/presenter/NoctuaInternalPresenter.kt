@@ -28,6 +28,7 @@ internal class NoctuaInternalPresenter(
     private val eventDao: EventDao
 ) {
     private var sessionTracker: SessionTracker? = null
+    private val globalExtraParams = mutableMapOf<String, Any>()
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -86,32 +87,12 @@ internal class NoctuaInternalPresenter(
         sessionTracker?.dispose()
     }
 
-    private fun flushLocalEvents() {
-        scope.launch {
-            if (!NetworkStatusProvider.isConnected()) {
-                AppLogger.d(Constants.NOCTUA_TAG, "No Internet Connection")
-                return@launch
-            }
+    fun setSessionExtraParams(params: Map<String, Any>) {
+        globalExtraParams.putAll(params)
+    }
 
-            val events = eventDao.getAll()
-            if (events.isEmpty()) {
-                AppLogger.d(Constants.NOCTUA_TAG, "No pending events")
-                return@launch
-            }
-
-            val payloadList = events.map { it.events }
-
-            val result = remote.sendEvents(payloadList)
-
-            result.onSuccess {
-                AppLogger.d(Constants.NOCTUA_TAG, "Pending events successfully delivered")
-                eventDao.deleteAll()
-            }
-
-            result.onError { error ->
-                AppLogger.e(Constants.NOCTUA_TAG, "Pending event delivery failed: ${error.name}")
-            }
-        }
+    private fun clearSessionExtraParams() {
+        globalExtraParams.clear()
     }
 
     fun trackCustomEvent(
@@ -120,7 +101,7 @@ internal class NoctuaInternalPresenter(
         revenue: Double? = null,
         currency: String? = null
     ) {
-        AppLogger.d(Constants.NOCTUA_TAG, "Sending Event $eventName")
+        AppLogger.d(Constants.NOCTUA_TAG, "Track Event $eventName")
 
         val eventPayload = mutableMapOf<String, Any>(
             "event_name" to eventName,
@@ -146,6 +127,10 @@ internal class NoctuaInternalPresenter(
 
         if (sessionTag.isNotEmpty() && sessionEvents.contains(eventName)) {
             eventPayload["feature_tag"] = sessionTag
+
+            if (globalExtraParams.isNotEmpty()) {
+                eventPayload.putAll(globalExtraParams)
+            }
         }
 
         val experiment = getExperiment()
@@ -166,18 +151,50 @@ internal class NoctuaInternalPresenter(
         scope.launch {
             val connected = NetworkStatusProvider.isConnected()
             if (!connected) {
-                AppLogger.d(Constants.NOCTUA_TAG, "No Internet Connection")
                 eventDao.insert(EventEntity(events = propertiesToJson))
-                AppLogger.d(Constants.NOCTUA_TAG, "Event $eventName saved locally")
+                AppLogger.d(Constants.NOCTUA_TAG, "No internet connection, event $eventName saved locally")
                 return@launch
             }
 
-            val result = remote.sendEvents(listOf(propertiesToJson))
-            result.onSuccess {
-                AppLogger.d(Constants.NOCTUA_TAG, "Send Event $eventName Success")
+            val localEvents = eventDao.getAll()
+            AppLogger.d(Constants.NOCTUA_TAG, "Local events count: ${localEvents.count()}")
+
+            if (localEvents.count() > 100) {
+                flushLocalEvents()
+                return@launch
             }
+
+            eventDao.insert(EventEntity(events = propertiesToJson))
+        }
+    }
+
+    private fun flushLocalEvents() {
+        scope.launch {
+            if (!NetworkStatusProvider.isConnected()) {
+                AppLogger.d(Constants.NOCTUA_TAG, "No Internet Connection")
+                return@launch
+            }
+
+            val events = eventDao.getAll()
+            if (events.isEmpty()) {
+                AppLogger.d(Constants.NOCTUA_TAG, "No local events")
+                return@launch
+            }
+
+            val payloadList = events.map { it.events }
+            AppLogger.i(Constants.NOCTUA_TAG, "Total events to send: ${payloadList.size}")
+
+            val result = remote.sendEvents(payloadList)
+
+            result.onSuccess {
+                AppLogger.d(Constants.NOCTUA_TAG, "Local events successfully delivered")
+                clearSessionExtraParams()
+                eventDao.deleteAll()
+            }
+
             result.onError { error ->
-                AppLogger.e(Constants.NOCTUA_TAG, "Send Event $eventName Error : ${error.name}")
+                clearSessionExtraParams()
+                AppLogger.e(Constants.NOCTUA_TAG, "Local event delivery failed: ${error.name}")
             }
         }
     }
