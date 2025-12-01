@@ -152,6 +152,7 @@ internal class NoctuaInternalPresenter(
             val connected = NetworkStatusProvider.isConnected()
             if (!connected) {
                 eventDao.insert(EventEntity(events = propertiesToJson))
+                clearSessionExtraParams()
                 AppLogger.d(Constants.NOCTUA_TAG, "No internet connection, event $eventName saved locally")
                 return@launch
             }
@@ -160,11 +161,14 @@ internal class NoctuaInternalPresenter(
             AppLogger.d(Constants.NOCTUA_TAG, "Local events count: ${localEvents.count()}")
 
             if (localEvents.count() > 100) {
+                eventDao.insert(EventEntity(events = propertiesToJson))
+                clearSessionExtraParams()
                 flushLocalEvents()
                 return@launch
             }
 
             eventDao.insert(EventEntity(events = propertiesToJson))
+            clearSessionExtraParams()
         }
     }
 
@@ -188,12 +192,10 @@ internal class NoctuaInternalPresenter(
 
             result.onSuccess {
                 AppLogger.d(Constants.NOCTUA_TAG, "Local events successfully delivered")
-                clearSessionExtraParams()
                 eventDao.deleteAll()
             }
 
             result.onError { error ->
-                clearSessionExtraParams()
                 AppLogger.e(Constants.NOCTUA_TAG, "Local event delivery failed: ${error.name}")
             }
         }
