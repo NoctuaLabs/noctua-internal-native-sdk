@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [android-sdk-v0.9.0] - 2025-11-27
+## [android-sdk-v0.10.0] - 2025-12-01
 
 ### 🚀 Features
 
@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Add session id for all events
 - Reduce server load by batching and sending 101 events per request
 - Add function set session extra params
+- Add clear session extra params after save data locally
 
 ### 🐛 Bug Fixes
 
