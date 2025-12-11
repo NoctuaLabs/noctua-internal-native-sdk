@@ -7,6 +7,18 @@ object NoctuaInternal {
 
     private val presenter = getKoin().get<NoctuaInternalPresenter>()
 
+    fun saveExternalEvents(jsonString: String) {
+        presenter.saveExternalEvents(jsonString)
+    }
+
+    fun getExternalEvents(onResult: (List<String>) -> Unit) {
+        presenter.getExternalEvents(onResult)
+    }
+
+    fun deleteExternalEvents() {
+        presenter.deleteExternalEvents()
+    }
+
     fun onInternalNoctuaApplicationPause(pauseStatus: Boolean) {
         presenter.onInternalNoctuaApplicationPause(pauseStatus)
     }
