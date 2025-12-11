@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [android-sdk-v0.10.0] - 2025-12-01
+## [android-sdk-v0.11.0] - 2025-12-11
 
 ### 🚀 Features
 
@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Reduce server load by batching and sending 101 events per request
 - Add function set session extra params
 - Add clear session extra params after save data locally
+- Expose Room-based event persistence (save/get/delete)
 
 ### 🐛 Bug Fixes
 
@@ -29,6 +30,10 @@ All notable changes to this project will be documented in this file.
 - Kotlin version, compilesdk and agp is too higher
 - Update version sdk
 - Noctuagg.json not loaded properly
+
+### 💼 Other
+
+- Bump sdk version to 0.11.0
 
 ### 🚜 Refactor
 
