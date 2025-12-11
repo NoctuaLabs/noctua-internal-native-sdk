@@ -28,6 +28,7 @@ val sharedModule = module {
     }
 
     single { get<NoctuaDatabase>().eventDao }
+    single { get<NoctuaDatabase>().externalEventDao }
 
     single { DeviceUtils() }
 
@@ -50,6 +51,14 @@ val sharedModule = module {
         )
     }
 
-    factory { NoctuaInternalPresenter(get(), get(), get(), get()) }
+    factory {
+        NoctuaInternalPresenter(
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
 
 }

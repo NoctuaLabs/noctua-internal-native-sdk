@@ -2,6 +2,8 @@ package com.noctuagames.labs.sdk.presenter
 
 import com.noctuagames.labs.sdk.data.database.dao.EventDao
 import com.noctuagames.labs.sdk.data.database.entity.EventEntity
+import com.noctuagames.labs.sdk.data.local.dao.ExternalEventDao
+import com.noctuagames.labs.sdk.data.local.entity.ExternalEventEntity
 import com.noctuagames.labs.sdk.data.models.NoctuaConfig
 import com.noctuagames.labs.sdk.data.remote.NetworkStatusProvider
 import com.noctuagames.labs.sdk.data.remote.RemoteNoctuaInternal
@@ -25,7 +27,8 @@ internal class NoctuaInternalPresenter(
     private val deviceUtils: DeviceUtils,
     private val noctuaConfig: NoctuaConfig,
     private val remote: RemoteNoctuaInternal,
-    private val eventDao: EventDao
+    private val eventDao: EventDao,
+    private val externalEventDao: ExternalEventDao
 ) {
     private var sessionTracker: SessionTracker? = null
     private val globalExtraParams = mutableMapOf<String, Any>()
@@ -44,6 +47,25 @@ internal class NoctuaInternalPresenter(
         flushLocalEvents()
 
         AppLogger.d(Constants.NOCTUA_TAG, "Internal Noctua SDK is initialized")
+    }
+
+    fun saveExternalEvents(jsonString: String) {
+        scope.launch {
+            externalEventDao.insert(ExternalEventEntity(events = jsonString))
+        }
+    }
+
+    fun getExternalEvents(onResult: (List<String>) -> Unit) {
+        scope.launch {
+            val eventList = externalEventDao.getAll().map { it.events }
+            onResult(eventList)
+        }
+    }
+
+    fun deleteExternalEvents() {
+        scope.launch {
+            externalEventDao.deleteAll()
+        }
     }
 
     fun setSessionTag(tag: String) {
