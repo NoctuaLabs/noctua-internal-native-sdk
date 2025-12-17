@@ -1,6 +1,6 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
@@ -11,9 +11,9 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.kotlinCocoapods)
 
     id("maven-publish")
-
 }
 
 val sdkVersion = File("version.txt").readText().trim()
@@ -38,6 +38,35 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
+    }
+
+    cocoapods {
+        name = "NoctuaInternalSDK"
+        version = sdkVersion
+        summary = "Noctua internal iOS SDK"
+        description = "A lightweight Kotlin Multiplatform Noctua Internal SDK with offline caching and event batching support."
+        homepage = "https://github.com/NoctuaLabs/noctua-internal-native-sdk"
+        authors = "Noctua Labs"
+        license = "{ :type => 'MIT', :file => 'LICENSE' }"
+        source = "{ :git => 'git@github.com:NoctuaLabs/noctua-internal-native-sdk.git', :tag => '$sdkVersion' }"
+        specRepos {
+            url("https://github.com/NoctuaLabs/noctua-internal-native-sdk.git")
+        }
+
+        ios.deploymentTarget = "14.0"
+
+        framework {
+            baseName = "NoctuaInternalSDK"
+            isStatic = false
+            // Dependency export
+            // Uncomment and specify another project module if you have one:
+            // export(project(":<your other KMP module>"))
+            transitiveExport = false // This is default.
+        }
+
+        // Maps custom Xcode configuration to NativeBuildType
+//        xcodeConfigurationToNativeBuildType["CUSTOM_DEBUG"] = NativeBuildType.DEBUG
+        xcodeConfigurationToNativeBuildType["CUSTOM_RELEASE"] = NativeBuildType.RELEASE
     }
 
     listOf(
