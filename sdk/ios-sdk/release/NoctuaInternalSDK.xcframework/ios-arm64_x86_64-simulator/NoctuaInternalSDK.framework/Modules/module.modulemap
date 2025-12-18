@@ -1,0 +1,5 @@
+framework module "NoctuaInternalSDK" {
+    umbrella header "NoctuaInternalSDK.h"
+    export *
+    module * { export * }
+}
