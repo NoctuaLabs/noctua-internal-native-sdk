@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'NoctuaInternalSDK'
-    spec.version                  = '0.11.0'
+    spec.version                  = '0.13.0'
     spec.homepage                 = 'https://github.com/NoctuaLabs/noctua-internal-native-sdk'
     spec.source                   = { :http=> ''}
     spec.authors                  = 'Noctua Labs'
