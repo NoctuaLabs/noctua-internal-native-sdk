@@ -1,6 +1,7 @@
 package com.noctuagames.labs.sdk.utils
 
 import com.noctuagames.labs.sdk.data.models.NoctuaConfig
+import com.noctuagames.labs.sdk.di.initKoin
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.UIntVar
 import kotlinx.serialization.json.Json
@@ -18,6 +19,9 @@ import platform.SystemConfiguration.SCNetworkReachabilityGetFlags
 import platform.SystemConfiguration.kSCNetworkFlagsConnectionRequired
 import platform.SystemConfiguration.kSCNetworkFlagsReachable
 
+fun initKoinManually() {
+    initKoin()
+}
 actual object AppContext
 
 @OptIn(ExperimentalForeignApi::class)

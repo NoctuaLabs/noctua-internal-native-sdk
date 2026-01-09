@@ -1,8 +1,8 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'NoctuaInternalSDK'
-    spec.version                  = '0.11.0'
+    spec.version                  = '0.13.0'
     spec.homepage                 = 'https://github.com/NoctuaLabs/noctua-internal-native-sdk'
-    spec.source                   = { :git => 'git@github.com:NoctuaLabs/noctua-internal-native-sdk.git', :tag => 'ios-sdk-v0.11.0' }
+    spec.source                   = { :git => 'https://github.com/NoctuaLabs/noctua-internal-native-sdk.git', :tag => 'ios-sdk-v0.13.0' }
     spec.authors                  = 'Noctua Labs'
     spec.license                  = { :type => 'MIT', :file => 'LICENSE' }
     spec.summary                  = 'Noctua internal iOS SDK'
