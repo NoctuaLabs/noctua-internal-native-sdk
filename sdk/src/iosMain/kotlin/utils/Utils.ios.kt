@@ -25,15 +25,23 @@ fun initKoinManually() {
 actual object AppContext
 
 @OptIn(ExperimentalForeignApi::class)
-actual  fun loadAppConfig(): NoctuaConfig {
+actual fun loadAppConfig(): NoctuaConfig {
     val filePath = NSBundle.mainBundle.pathForResource("noctuagg", "json")
         ?: throw IllegalArgumentException("noctuagg.json not found in bundle")
 
-    val content = NSString.stringWithContentsOfFile(filePath, NSUTF8StringEncoding, null)
-        ?: throw IllegalArgumentException("Failed to read noctuagg.json")
+    val content = NSString.stringWithContentsOfFile(
+        filePath,
+        NSUTF8StringEncoding,
+        null
+    ) ?: throw IllegalArgumentException("Failed to read noctuagg.json")
 
-    return Json.decodeFromString(NoctuaConfig.serializer(), content)
+    val json = Json {
+        ignoreUnknownKeys = true
+    }
+
+    return json.decodeFromString(NoctuaConfig.serializer(), content)
 }
+
 
 actual fun getPlatformType(): String {
     return PlatformType.appstore.name
