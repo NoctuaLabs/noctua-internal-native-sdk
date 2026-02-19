@@ -11,6 +11,6 @@ data class ExternalEventEntity(
     val id: Long = 0,
     @ColumnInfo(name = "event_json")
     val eventJson: String,
-    @ColumnInfo(name = "created_at")
+    @ColumnInfo(name = "created_at", defaultValue = "0")
     val createdAt: Long = getCurrentTimeMillis()
 )
