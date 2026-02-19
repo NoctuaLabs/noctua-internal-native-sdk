@@ -68,6 +68,43 @@ internal class NoctuaInternalPresenter(
         }
     }
 
+    // NEW: Per-row event storage methods for unlimited event tracking
+
+    fun insertExternalEvent(eventJson: String) {
+        scope.launch {
+            externalEventDao.insertSingle(ExternalEventEntity(eventJson = eventJson))
+        }
+    }
+
+    fun getExternalEventsBatch(limit: Int, offset: Int, callback: (String) -> Unit) {
+        scope.launch {
+            val events = externalEventDao.getBatch(limit, offset)
+            // Return as JSON array of {id, eventJson, createdAt} objects
+            val jsonArray = events.joinToString(",") { e ->
+                """{"id":${e.id},"eventJson":${e.eventJson},"createdAt":${e.createdAt}}"""
+            }
+            callback("[$jsonArray]")
+        }
+    }
+
+    fun deleteExternalEventsByIds(idsJson: String, callback: (Int) -> Unit) {
+        scope.launch {
+            // idsJson = "[1,2,3]"
+            val ids = idsJson.removeSurrounding("[", "]")
+                .split(",")
+                .filter { it.isNotBlank() }
+                .map { it.trim().toLong() }
+            val deletedCount = externalEventDao.deleteByIds(ids)
+            callback(deletedCount)
+        }
+    }
+
+    fun getExternalEventCount(callback: (Int) -> Unit) {
+        scope.launch {
+            callback(externalEventDao.getCount())
+        }
+    }
+
     fun setSessionTag(tag: String) {
         ExperimentManager.setSessionTag(tag)
     }

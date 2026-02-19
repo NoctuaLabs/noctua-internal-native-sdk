@@ -24,6 +24,7 @@ val sharedModule = module {
     single {
         get<DatabaseFactory>().create()
             .setDriver(BundledSQLiteDriver())
+            .addMigrations(NoctuaDatabase.MIGRATION_1_2)
             .build()
     }
 
