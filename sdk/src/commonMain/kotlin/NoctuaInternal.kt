@@ -19,6 +19,24 @@ object NoctuaInternal {
         presenter.deleteExternalEvents()
     }
 
+    // NEW: Per-row event storage for unlimited event tracking
+
+    fun insertExternalEvent(eventJson: String) {
+        presenter.insertExternalEvent(eventJson)
+    }
+
+    fun getExternalEventsBatch(limit: Int, offset: Int, callback: (String) -> Unit) {
+        presenter.getExternalEventsBatch(limit, offset, callback)
+    }
+
+    fun deleteExternalEventsByIds(idsJson: String, callback: (Int) -> Unit) {
+        presenter.deleteExternalEventsByIds(idsJson, callback)
+    }
+
+    fun getExternalEventCount(callback: (Int) -> Unit) {
+        presenter.getExternalEventCount(callback)
+    }
+
     fun onInternalNoctuaApplicationPause(pauseStatus: Boolean) {
         presenter.onInternalNoctuaApplicationPause(pauseStatus)
     }
