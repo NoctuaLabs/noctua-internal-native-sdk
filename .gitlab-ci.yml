@@ -168,7 +168,7 @@ release-ios-sdk:
     - git config --global user.email "gitlab-ci@noctua.gg"
     - git config --global user.name "Noctua Gitlab CI"
   script:
-    - git fetch --tags
+    - git fetch origin --tags
     - git checkout origin/$CI_COMMIT_BRANCH
     - NEW_VERSION=$(cat version.txt | tr -d '[:space:]')
     - NEW_VERSION_TAG="ios-sdk-v${NEW_VERSION}"
