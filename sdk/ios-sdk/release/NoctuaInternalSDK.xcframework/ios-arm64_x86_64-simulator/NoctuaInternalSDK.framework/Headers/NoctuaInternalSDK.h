@@ -915,6 +915,7 @@ __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("Utils_iosKt")))
 @interface NISDKUtils_iosKt : NISDKBase
 + (NSString *)getPlatformType __attribute__((swift_name("getPlatformType()")));
++ (void)doInitKoinManually __attribute__((swift_name("doInitKoinManually()")));
 
 /**
  * @note This method converts instances of CancellationException to errors.

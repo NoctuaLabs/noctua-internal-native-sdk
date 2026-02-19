@@ -46,18 +46,17 @@ kotlin {
         summary = "Noctua internal iOS SDK"
         description = "A lightweight Kotlin Multiplatform Noctua Internal SDK with offline caching and event batching support."
         homepage = "https://github.com/NoctuaLabs/noctua-internal-native-sdk"
+
         authors = "Noctua Labs"
         license = "{ :type => 'MIT', :file => 'LICENSE' }"
-        source = "{ :git => 'git@github.com:NoctuaLabs/noctua-internal-native-sdk.git', :tag => '$sdkVersion' }"
-        specRepos {
-            url("https://github.com/NoctuaLabs/noctua-internal-native-sdk.git")
-        }
+        source = "{ :git => 'https://github.com/NoctuaLabs/noctua-internal-native-sdk.git', :tag => 'ios-sdk-v$version' }"
 
         ios.deploymentTarget = "14.0"
+        publishDir = file("ios-sdk")
 
         framework {
             baseName = "NoctuaInternalSDK"
-            isStatic = false
+            isStatic = true
             // Dependency export
             // Uncomment and specify another project module if you have one:
             // export(project(":<your other KMP module>"))

@@ -1,12 +1,12 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'NoctuaInternalSDK'
-    spec.version                  = '0.11.0'
+    spec.version                  = '0.14.0'
     spec.homepage                 = 'https://github.com/NoctuaLabs/noctua-internal-native-sdk'
-    spec.source                   = { :git => 'git@github.com:NoctuaLabs/noctua-internal-native-sdk.git', :tag => 'ios-sdk-v0.11.0' }
+    spec.source                   = { :git => 'https://github.com/NoctuaLabs/noctua-internal-native-sdk.git', :tag => 'ios-sdk-v0.14.0' }
     spec.authors                  = 'Noctua Labs'
     spec.license                  = { :type => 'MIT', :file => 'LICENSE' }
     spec.summary                  = 'Noctua internal iOS SDK'
-    spec.vendored_frameworks      = 'NoctuaInternalSDK.xcframework'
+    spec.vendored_frameworks      = 'sdk/ios-sdk/release/NoctuaInternalSDK.xcframework'
     spec.libraries                = 'c++'
     spec.ios.deployment_target    = '14.0'
                 
