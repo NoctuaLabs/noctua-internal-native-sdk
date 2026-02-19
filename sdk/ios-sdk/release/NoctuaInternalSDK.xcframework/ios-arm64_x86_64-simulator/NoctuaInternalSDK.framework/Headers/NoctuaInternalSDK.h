@@ -152,10 +152,14 @@ __attribute__((swift_name("NoctuaInternal")))
 + (instancetype)noctuaInternal __attribute__((swift_name("init()")));
 @property (class, readonly, getter=shared) NISDKNoctuaInternal *shared __attribute__((swift_name("shared")));
 - (void)deleteExternalEvents __attribute__((swift_name("deleteExternalEvents()")));
+- (void)deleteExternalEventsByIdsIdsJson:(NSString *)idsJson callback:(void (^)(NISDKInt *))callback __attribute__((swift_name("deleteExternalEventsByIds(idsJson:callback:)")));
 - (NSString *)getExperiment __attribute__((swift_name("getExperiment()")));
+- (void)getExternalEventCountCallback:(void (^)(NISDKInt *))callback __attribute__((swift_name("getExternalEventCount(callback:)")));
 - (void)getExternalEventsOnResult:(void (^)(NSArray<NSString *> *))onResult __attribute__((swift_name("getExternalEvents(onResult:)")));
+- (void)getExternalEventsBatchLimit:(int32_t)limit offset:(int32_t)offset callback:(void (^)(NSString *))callback __attribute__((swift_name("getExternalEventsBatch(limit:offset:callback:)")));
 - (NSString *)getGeneralExperimentExperimentKey:(NSString *)experimentKey __attribute__((swift_name("getGeneralExperiment(experimentKey:)")));
 - (NSString *)getSessionTag __attribute__((swift_name("getSessionTag()")));
+- (void)insertExternalEventEventJson:(NSString *)eventJson __attribute__((swift_name("insertExternalEvent(eventJson:)")));
 - (void)onInternalNoctuaApplicationPausePauseStatus:(BOOL)pauseStatus __attribute__((swift_name("onInternalNoctuaApplicationPause(pauseStatus:)")));
 - (void)onInternalNoctuaDispose __attribute__((swift_name("onInternalNoctuaDispose()")));
 - (void)saveExternalEventsJsonString:(NSString *)jsonString __attribute__((swift_name("saveExternalEvents(jsonString:)")));
@@ -250,6 +254,19 @@ __attribute__((swift_name("NoctuaDatabase.Companion")))
 + (instancetype)companion __attribute__((swift_name("init()")));
 @property (class, readonly, getter=shared) NISDKNoctuaDatabaseCompanion *shared __attribute__((swift_name("shared")));
 @property (readonly) NSString *DB_NAME __attribute__((swift_name("DB_NAME")));
+@end
+
+__attribute__((swift_name("Room_runtimeAutoMigrationSpec")))
+@protocol NISDKRoom_runtimeAutoMigrationSpec
+@required
+- (void)onPostMigrateConnection:(id<NISDKSqliteSQLiteConnection>)connection __attribute__((swift_name("onPostMigrate(connection:)")));
+@end
+
+__attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("NoctuaDatabase.Migration1To2")))
+@interface NISDKNoctuaDatabaseMigration1To2 : NISDKBase <NISDKRoom_runtimeAutoMigrationSpec>
+- (instancetype)init __attribute__((swift_name("init()"))) __attribute__((objc_designated_initializer));
++ (instancetype)new __attribute__((availability(swift, unavailable, message="use object initializers instead")));
 @end
 
 __attribute__((swift_name("Room_runtimeRoomDatabaseConstructor")))
@@ -391,13 +408,37 @@ __attribute__((swift_name("ExternalEventDao")))
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)deleteByIdsIds:(NSArray<NISDKLong *> *)ids completionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("deleteByIds(ids:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)getAllWithCompletionHandler:(void (^)(NSArray<NISDKExternalEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getAll(completionHandler:)")));
 
 /**
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)getBatchLimit:(int32_t)limit offset:(int32_t)offset completionHandler:(void (^)(NSArray<NISDKExternalEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getBatch(limit:offset:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)getCountWithCompletionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getCount(completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)insertEvent:(NISDKExternalEventEntity *)event completionHandler_:(void (^)(NSError * _Nullable))completionHandler __attribute__((swift_name("insert(event:completionHandler_:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)insertSingleEvent:(NISDKExternalEventEntity *)event completionHandler:(void (^)(NISDKLong * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("insertSingle(event:completionHandler:)")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -416,13 +457,37 @@ __attribute__((swift_name("ExternalEventDao_Impl")))
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)deleteByIdsIds:(NSArray<NISDKLong *> *)ids completionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("deleteByIds(ids:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)getAllWithCompletionHandler:(void (^)(NSArray<NISDKExternalEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getAll(completionHandler:)")));
 
 /**
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)getBatchLimit:(int32_t)limit offset:(int32_t)offset completionHandler:(void (^)(NSArray<NISDKExternalEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getBatch(limit:offset:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)getCountWithCompletionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getCount(completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)insertEvent:(NISDKExternalEventEntity *)event completionHandler_:(void (^)(NSError * _Nullable))completionHandler __attribute__((swift_name("insert(event:completionHandler_:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)insertSingleEvent:(NISDKExternalEventEntity *)event completionHandler:(void (^)(NISDKLong * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("insertSingle(event:completionHandler:)")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -438,12 +503,13 @@ __attribute__((swift_name("ExternalEventDao_Impl.Companion")))
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("ExternalEventEntity")))
 @interface NISDKExternalEventEntity : NISDKBase
-- (instancetype)initWithId:(int64_t)id events:(NSString *)events __attribute__((swift_name("init(id:events:)"))) __attribute__((objc_designated_initializer));
-- (NISDKExternalEventEntity *)doCopyId:(int64_t)id events:(NSString *)events __attribute__((swift_name("doCopy(id:events:)")));
+- (instancetype)initWithId:(int64_t)id eventJson:(NSString *)eventJson createdAt:(int64_t)createdAt __attribute__((swift_name("init(id:eventJson:createdAt:)"))) __attribute__((objc_designated_initializer));
+- (NISDKExternalEventEntity *)doCopyId:(int64_t)id eventJson:(NSString *)eventJson createdAt:(int64_t)createdAt __attribute__((swift_name("doCopy(id:eventJson:createdAt:)")));
 - (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
 - (NSUInteger)hash __attribute__((swift_name("hash()")));
 - (NSString *)description __attribute__((swift_name("description()")));
-@property (readonly) NSString *events __attribute__((swift_name("events")));
+@property (readonly) int64_t createdAt __attribute__((swift_name("createdAt")));
+@property (readonly) NSString *eventJson __attribute__((swift_name("eventJson")));
 @property (readonly) int64_t id __attribute__((swift_name("id")));
 @end
 
@@ -990,12 +1056,6 @@ __attribute__((swift_name("KotlinKClass")))
 - (BOOL)isInstanceValue:(id _Nullable)value __attribute__((swift_name("isInstance(value:)")));
 @property (readonly) NSString * _Nullable qualifiedName __attribute__((swift_name("qualifiedName")));
 @property (readonly) NSString * _Nullable simpleName __attribute__((swift_name("simpleName")));
-@end
-
-__attribute__((swift_name("Room_runtimeAutoMigrationSpec")))
-@protocol NISDKRoom_runtimeAutoMigrationSpec
-@required
-- (void)onPostMigrateConnection:(id<NISDKSqliteSQLiteConnection>)connection __attribute__((swift_name("onPostMigrate(connection:)")));
 @end
 
 __attribute__((objc_subclassing_restricted))
