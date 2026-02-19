@@ -1,4 +1,4 @@
-## [android-sdk-v0.12.0] - 2025-12-18
+## [android-sdk-v0.13.0] - 2026-02-19
 
 ### 🚀 Features
 
@@ -16,6 +16,7 @@
 - Expose Room-based event persistence (save/get/delete)
 - Setup cocoapods
 - Add noctua internal sdk xcframework
+- Add per-row event storage for unlimited event tracking
 
 ### 🐛 Bug Fixes
 
@@ -28,10 +29,16 @@
 - Kotlin version, compilesdk and agp is too higher
 - Update version sdk
 - Noctuagg.json not loaded properly
+- Koin di not working properly - ios
+- Vendored framworks path
+- Ignore unknown keys
+- Replace manual SQLiteConnection migration with Room @AutoMigration
+- Add defaultValue for created_at column in AutoMigration
 
 ### 💼 Other
 
 - Bump sdk version to 0.11.0
+- Bump version manually
 
 ### 🚜 Refactor
 
@@ -43,3 +50,4 @@
 ### ⚙️ Miscellaneous Tasks
 
 - Bump SDK versions to 0.5.0 ->0.6.0
+- Bump version to 0.15.0
