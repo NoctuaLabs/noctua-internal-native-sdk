@@ -3,7 +3,7 @@ package com.noctuagames.labs.sdk.data.local.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlinx.datetime.Clock
+import com.noctuagames.labs.sdk.utils.getCurrentTimeMillis
 
 @Entity(tableName = "external_events")
 data class ExternalEventEntity(
@@ -12,5 +12,5 @@ data class ExternalEventEntity(
     @ColumnInfo(name = "event_json")
     val eventJson: String,
     @ColumnInfo(name = "created_at")
-    val createdAt: Long = Clock.System.now().toEpochMilliseconds()
+    val createdAt: Long = getCurrentTimeMillis()
 )

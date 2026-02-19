@@ -51,13 +51,13 @@ internal class NoctuaInternalPresenter(
 
     fun saveExternalEvents(jsonString: String) {
         scope.launch {
-            externalEventDao.insert(ExternalEventEntity(events = jsonString))
+            externalEventDao.insert(ExternalEventEntity(eventJson = jsonString))
         }
     }
 
     fun getExternalEvents(onResult: (List<String>) -> Unit) {
         scope.launch {
-            val eventList = externalEventDao.getAll().map { it.events }
+            val eventList = externalEventDao.getAll().map { it.eventJson }
             onResult(eventList)
         }
     }
