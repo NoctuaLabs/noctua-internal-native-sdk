@@ -165,22 +165,22 @@ release-ios-sdk:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
   before_script:
-    - brew install git-cliff || true
     - git config --global user.email "gitlab-ci@noctua.gg"
     - git config --global user.name "Noctua Gitlab CI"
   script:
     - git fetch --tags
     - git checkout origin/$CI_COMMIT_BRANCH
-    - NEW_VERSION_TAG=$(git-cliff --repository "." --include-path "sdk/**" --tag-pattern "ios-sdk-v.*" --bumped-version)
-    - NEW_VERSION=$(echo $NEW_VERSION_TAG | sed "s/ios-sdk-v//")
-    - echo $NEW_VERSION > version.txt
+    - NEW_VERSION=$(cat version.txt | tr -d '[:space:]')
+    - NEW_VERSION_TAG="ios-sdk-v${NEW_VERSION}"
+    - echo "Releasing $NEW_VERSION_TAG"
     - |
       sed -i '' "s/spec.version.*=.*/spec.version                  = '$NEW_VERSION'/" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
-      sed -i '' "s/spec.source.*=.*/spec.source                   = { :git => 'https:\/\/github.com\/NoctuaLabs\/noctua-internal-native-sdk.git', :tag => 'ios-sdk-v$NEW_VERSION' }/" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
-    - git add version.txt sdk/ios-sdk/release/NoctuaInternalSDK.podspec
-    - git-cliff --repository "." --include-path "sdk/**" --tag-pattern "ios-sdk-v.*" --bump > CHANGELOG-ios.md
-    - git add CHANGELOG-ios.md
-    - git commit -m "Release $NEW_VERSION_TAG"
+      sed -i '' "s|spec.source.*=.*|spec.source                   = { :git => 'https://github.com/NoctuaLabs/noctua-internal-native-sdk.git', :tag => '$NEW_VERSION_TAG' }|" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
+    - git add sdk/ios-sdk/release/NoctuaInternalSDK.podspec
+    - |
+      if [ -n "$(git diff --cached --name-only)" ]; then
+        git commit -m "Release $NEW_VERSION_TAG"
+      fi
     - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
 
@@ -204,8 +204,8 @@ publish-ios-sdk:
     - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
     - pod repo add noctua-specs https://github.com/NoctuaLabs/Specs.git 2>/dev/null || pod repo update noctua-specs
     - pod repo push noctua-specs sdk/ios-sdk/release/NoctuaInternalSDK.podspec --allow-warnings
-    - NEW_VERSION_TAG="ios-sdk-v$(cat version.txt)"
-    - git-cliff --repository "." --include-path "sdk/**" --tag-pattern "ios-sdk-v.*" --latest > GithubRelease-ios.md || echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
+    - NEW_VERSION_TAG="ios-sdk-v$(cat version.txt | tr -d '[:space:]')"
+    - echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
     - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
     - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip"
