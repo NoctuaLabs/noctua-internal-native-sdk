@@ -13,3 +13,11 @@ xcuserdata
 *.gpg
 
 .github
+/sdk/schemas/com.noctuagames.labs.sdk.data.database.NoctuaDatabase/2.json
+
+# Claude Code
+.claude/
+.mcp.json
+
+# Firebase
+firebase-debug.log

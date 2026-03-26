@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "noctua-analytics-kmp"
 include(":sdk")
+include(":examples:composeApp")

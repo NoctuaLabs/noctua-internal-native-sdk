@@ -19,8 +19,15 @@ import platform.SystemConfiguration.SCNetworkReachabilityGetFlags
 import platform.SystemConfiguration.kSCNetworkFlagsConnectionRequired
 import platform.SystemConfiguration.kSCNetworkFlagsReachable
 
+private var lifecycleObserver: IOSLifecycleObserver? = null
+
 fun initKoinManually() {
     initKoin()
+
+    // Start observing iOS lifecycle notifications so that session
+    // pause/resume and heartbeat work automatically without requiring
+    // the host app to call onInternalNoctuaApplicationPause manually.
+    lifecycleObserver = IOSLifecycleObserver().also { it.startObserving() }
 }
 actual object AppContext
 

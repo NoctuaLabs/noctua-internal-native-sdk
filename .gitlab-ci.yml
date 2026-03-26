@@ -7,7 +7,7 @@ stages:
   - publish
 
 .bump-version:
-  image :
+  image:
     name: alpine/git
     entrypoint: [""]
   before_script:
@@ -29,14 +29,15 @@ test-android-sdk:
 bump-version-android-sdk:
   extends: .bump-version
   stage: bump-version
+  allow_failure: false
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
-      when: always
+      when: manual
   variables:
-    GIT_STRATEGY: fetch # reuse workspace
-    GIT_DEPTH: 0 # avoid shallow clone to give cliff all the info it needs
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: 0
   script:
     - NEW_VERSION_TAG=$(git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bumped-version)
     - echo $NEW_VERSION_TAG | sed -r "s/android-sdk-v(.*)/\1/" > version.txt
@@ -52,38 +53,43 @@ bump-version-android-sdk:
 deploy-android-sdk:
   image: cimg/android:2024.07.1
   stage: deploy
+  needs:
+    - job: bump-version-android-sdk
+      optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
       when: on_success
-      needs:
-        - bump-version-android-sdk
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: 0
   script:
-    - git checkout $CI_COMMIT_BRANCH
+    - git fetch origin
+    - git checkout origin/$CI_COMMIT_BRANCH
     - bash gradlew :sdk:publishAllPublicationsToGitLabRepository --no-configuration-cache
 
 release-android-sdk:
   extends: .bump-version
   stage: release
+  needs:
+    - job: deploy-android-sdk
+      optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
       when: manual
-      needs:
-        - deploy-android-sdk
   variables:
-    GIT_STRATEGY: fetch # reuse workspace
-    GIT_DEPTH: 0 # avoid shallow clone to give cliff all the info it needs
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: 0
   script:
     - git fetch --tags
     - git checkout origin/$CI_COMMIT_BRANCH
-    - NEW_VERSION_TAG=$(git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bumped-version)
-    - echo $NEW_VERSION_TAG | sed -r "s/android-sdk-v(.*)/\1/" > version.txt
-    - git add version.txt
+    - NEW_VERSION=$(cat version.txt | tr -d '[:space:]')
+    - NEW_VERSION_TAG="android-sdk-v${NEW_VERSION}"
     - git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bump > CHANGELOG.md
-    - git add CHANGELOG.md
+    - git add version.txt CHANGELOG.md
     - git commit -m "Release $NEW_VERSION_TAG"
     - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
@@ -91,16 +97,17 @@ release-android-sdk:
 publish-android-sdk:
   image: cimg/android:2024.07.1
   stage: publish
+  needs:
+    - job: release-android-sdk
+      optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
       when: on_success
-      needs:
-        - release-android-sdk
   variables:
-    GIT_STRATEGY: fetch # reuse workspace
-    GIT_DEPTH: 0 # avoid shallow clone to give cliff all the info it needs
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: 0
   script:
     - git fetch --tags
     - git checkout origin/$CI_COMMIT_BRANCH
@@ -116,6 +123,7 @@ publish-android-sdk:
     - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
     - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
+    - git push github HEAD:main --follow-tags -f
     - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar"
     - git remote remove github
 
@@ -125,11 +133,12 @@ build-ios-sdk:
   stage: build
   tags:
     - macmini
+  allow_failure: false
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
-      when: always
+      when: manual
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
@@ -154,13 +163,14 @@ release-ios-sdk:
   stage: release
   tags:
     - macmini
+  needs:
+    - job: build-ios-sdk
+      optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
       when: manual
-      needs:
-        - build-ios-sdk
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
@@ -188,13 +198,14 @@ publish-ios-sdk:
   stage: publish
   tags:
     - macmini
+  needs:
+    - job: release-ios-sdk
+      optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
       when: on_success
-      needs:
-        - release-ios-sdk
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
@@ -208,5 +219,6 @@ publish-ios-sdk:
     - echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
     - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
+    - git push github HEAD:main --follow-tags -f
     - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip"
     - git remote remove github

@@ -11,6 +11,7 @@ import com.noctuagames.labs.sdk.utils.AppLogger
 import com.noctuagames.labs.sdk.utils.Constants
 import com.noctuagames.labs.sdk.utils.DeviceUtils
 import com.noctuagames.labs.sdk.utils.ExperimentManager
+import com.noctuagames.labs.sdk.utils.SessionEventSink
 import com.noctuagames.labs.sdk.utils.SessionTracker
 import com.noctuagames.labs.sdk.utils.SessionTrackerConfig
 import com.noctuagames.labs.sdk.utils.additionalParams
@@ -29,7 +30,7 @@ internal class NoctuaInternalPresenter(
     private val remote: RemoteNoctuaInternal,
     private val eventDao: EventDao,
     private val externalEventDao: ExternalEventDao
-) {
+) : SessionEventSink {
     private var sessionTracker: SessionTracker? = null
     private val globalExtraParams = mutableMapOf<String, Any>()
 
@@ -41,8 +42,13 @@ internal class NoctuaInternalPresenter(
 
         sessionTracker = SessionTracker(
             config = SessionTrackerConfig(),
-            presenter = this
+            eventSink = this
         )
+
+        // Auto-start the first session so heartbeat fires on all platforms
+        // (especially iOS where no lifecycle observer existed before).
+        // The guard in SessionTracker.onApplicationPause prevents duplicate calls.
+        sessionTracker?.onApplicationPause(false)
 
         flushLocalEvents()
 
@@ -154,7 +160,27 @@ internal class NoctuaInternalPresenter(
         globalExtraParams.clear()
     }
 
-    fun trackCustomEvent(
+    /**
+     * Implements [SessionEventSink.trackCustomEvent] for session lifecycle events.
+     * Also serves as the general event tracking method with optional revenue parameters.
+     */
+    override fun trackCustomEvent(
+        eventName: String,
+        properties: Map<String, Any>,
+    ) {
+        trackCustomEventInternal(eventName, properties)
+    }
+
+    fun trackCustomEventWithRevenue(
+        eventName: String,
+        properties: Map<String, Any>,
+        revenue: Double,
+        currency: String
+    ) {
+        trackCustomEventInternal(eventName, properties, revenue, currency)
+    }
+
+    private fun trackCustomEventInternal(
         eventName: String,
         properties: Map<String, Any>,
         revenue: Double? = null,

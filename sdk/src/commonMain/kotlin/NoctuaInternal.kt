@@ -74,7 +74,7 @@ object NoctuaInternal {
     }
 
     fun trackCustomEventWithRevenue(eventName: String, revenue: Double, currency: String, properties: Map<String, Any>) {
-        presenter.trackCustomEvent(eventName, properties, revenue, currency)
+        presenter.trackCustomEventWithRevenue(eventName, properties, revenue, currency)
     }
 
     fun setSessionExtraParams(params: Map<String, Any>) {

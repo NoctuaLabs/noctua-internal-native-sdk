@@ -1,6 +1,5 @@
 package com.noctuagames.labs.sdk.utils
 
-import com.noctuagames.labs.sdk.presenter.NoctuaInternalPresenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -8,8 +7,18 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.concurrent.Volatile
+import kotlin.coroutines.CoroutineContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
+/**
+ * Interface for receiving session lifecycle events from [SessionTracker].
+ * Decouples session tracking from the presenter for testability.
+ */
+internal interface SessionEventSink {
+    fun trackCustomEvent(eventName: String, properties: Map<String, Any>)
+}
 
 data class SessionTrackerConfig(
     val heartbeatPeriodMs: Long = 60_000,  // 60 seconds
@@ -19,17 +28,19 @@ data class SessionTrackerConfig(
 @OptIn(ExperimentalUuidApi::class)
 internal class SessionTracker(
     private val config: SessionTrackerConfig,
-    private val presenter: NoctuaInternalPresenter
+    private val eventSink: SessionEventSink,
+    coroutineContext: CoroutineContext = Dispatchers.Default,
+    private val timeProvider: () -> Long = ::getCurrentTimeMillis
 ) : CoroutineScope {
 
     private val job = SupervisorJob()
-    override val coroutineContext = Dispatchers.Default + job
+    override val coroutineContext: CoroutineContext = coroutineContext + job
 
-    private var sessionId: String? = null
-    private var nextHeartbeat = getCurrentTimeMillis() + config.heartbeatPeriodMs
-    private var nextSessionTimeout = 0L
-    private var isPaused = true
-    private var isDisposed = false
+    @Volatile private var sessionId: String? = null
+    @Volatile private var nextHeartbeat = timeProvider() + config.heartbeatPeriodMs
+    @Volatile private var nextSessionTimeout = 0L
+    @Volatile private var isPaused = true
+    @Volatile private var isDisposed = false
 
     private var heartbeatJob: Job? = null
 
@@ -42,32 +53,32 @@ internal class SessionTracker(
         isPaused = pauseStatus
 
         if (pauseStatus) {
-            presenter.trackCustomEvent("session_pause", emptyMap())
-            nextSessionTimeout = getCurrentTimeMillis() + config.sessionTimeoutMs
+            eventSink.trackCustomEvent("session_pause", emptyMap())
+            nextSessionTimeout = timeProvider() + config.sessionTimeoutMs
             return
         }
 
         // Resume
-        if (sessionId != null && getCurrentTimeMillis() >= nextSessionTimeout) {
+        if (sessionId != null && timeProvider() >= nextSessionTimeout) {
             // Expired session → reset
             sessionId = null
         }
 
         if (sessionId != null) {
-            presenter.trackCustomEvent("session_continue", emptyMap())
+            eventSink.trackCustomEvent("session_continue", emptyMap())
         } else {
             sessionId = Uuid.random().toString()
             ExperimentManager.setSessionId(sessionId!!)
-            presenter.trackCustomEvent("session_start", emptyMap())
+            eventSink.trackCustomEvent("session_start", emptyMap())
         }
     }
 
     private fun startHeartbeatLoop() {
         heartbeatJob = launch {
             while (isActive && !isDisposed) {
-                if (!isPaused && getCurrentTimeMillis() >= nextHeartbeat) {
-                    presenter.trackCustomEvent("session_heartbeat", emptyMap())
-                    nextHeartbeat = getCurrentTimeMillis() + config.heartbeatPeriodMs
+                if (!isPaused && timeProvider() >= nextHeartbeat) {
+                    eventSink.trackCustomEvent("session_heartbeat", emptyMap())
+                    nextHeartbeat = timeProvider() + config.heartbeatPeriodMs
                 }
                 delay(100)
             }
@@ -77,7 +88,7 @@ internal class SessionTracker(
     fun dispose() {
         if (isDisposed) return
         isDisposed = true
-        presenter.trackCustomEvent("session_end", emptyMap())
+        eventSink.trackCustomEvent("session_end", emptyMap())
         job.cancel()
         heartbeatJob?.cancel()
     }
