@@ -30,9 +30,6 @@ targets:
         ENABLE_USER_SCRIPT_SANDBOXING: "NO"
         CODE_SIGN_STYLE: Automatic
     dependencies: []
-    scheme:
-      testTargets:
-        - iosAppUITests
     preBuildScripts:
       - name: "Build Kotlin Framework"
         script: |
@@ -43,16 +40,3 @@ targets:
             ./gradlew :examples:composeApp:linkDebugFrameworkIosArm64
           fi
         basedOnDependencyAnalysis: false
-  iosAppUITests:
-    type: bundle.ui-testing
-    platform: iOS
-    sources:
-      - iosAppUITests
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.noctuagames.ios.sdktest.uitests
-        CODE_SIGN_STYLE: Automatic
-        GENERATE_INFOPLIST_FILE: "YES"
-        TEST_TARGET_NAME: iosApp
-    dependencies:
-      - target: iosApp

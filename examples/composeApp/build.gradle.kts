@@ -39,6 +39,14 @@ kotlin {
             }
         }
 
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+                implementation(compose.uiTest)
+            }
+        }
+
         val androidMain by getting {
             dependencies {
                 implementation(libs.koin.android)
@@ -47,6 +55,12 @@ kotlin {
         }
 
         val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
+
+        val desktopTest by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
             }
