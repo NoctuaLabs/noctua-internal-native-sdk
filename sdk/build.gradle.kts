@@ -16,10 +16,34 @@ plugins {
     id("maven-publish")
 }
 
-val sdkVersion = File("version.txt").readText().trim()
+val sdkVersion = project.property("sdk.version").toString()
 
 group = "com.noctuagames.labs.sdk"
 version = sdkVersion
+
+// Generate BuildConfig.kt so runtime code reads version from gradle.properties (single source of truth)
+val generateBuildConfig by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/buildconfig")
+    val versionValue = sdkVersion
+
+    inputs.property("sdkVersion", versionValue)
+    outputs.dir(outputDir)
+
+    doLast {
+        val dir = outputDir.get().asFile.resolve("com/noctuagames/labs/sdk")
+        dir.mkdirs()
+        dir.resolve("BuildConfig.kt").writeText(
+            """
+            |package com.noctuagames.labs.sdk
+            |
+            |/** Auto-generated from gradle.properties — do not edit manually. */
+            |object BuildConfig {
+            |    const val SDK_VERSION = "$versionValue"
+            |}
+            """.trimMargin()
+        )
+    }
+}
 
 kotlin {
     val sdkBaseName = "NoctuaLabs"
@@ -89,6 +113,10 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+
+        commonMain {
+            kotlin.srcDir(generateBuildConfig.map { layout.buildDirectory.dir("generated/buildconfig") })
+        }
 
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

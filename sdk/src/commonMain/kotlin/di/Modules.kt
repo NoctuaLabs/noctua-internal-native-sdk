@@ -35,6 +35,9 @@ val sharedModule = module {
     single<NoctuaConfig> {
         try {
             val config = loadAppConfig()
+            // Enable verbose logging only when sandbox mode is active (dev/QA).
+            // Production builds (sandboxEnabled = false or absent) only emit errors.
+            AppLogger.enabled = config.noctua?.sandboxEnabled == true
             AppLogger.d(Constants.NOCTUA_TAG, "NoctuaConfig Loaded: ${config.clientId}")
             config
         } catch (e: Exception) {

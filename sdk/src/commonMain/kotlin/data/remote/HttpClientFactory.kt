@@ -30,6 +30,8 @@ internal object HttpClientFactory {
             install(Logging) {
                 logger = object : Logger {
                     override fun log(message: String) {
+                        // AppLogger.d() is a no-op when sandbox is disabled,
+                        // so HTTP details are silently dropped in production.
                         AppLogger.d(Constants.NOCTUA_TAG, message)
                     }
                 }
