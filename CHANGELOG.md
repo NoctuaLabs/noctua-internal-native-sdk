@@ -1,4 +1,4 @@
-## [android-sdk-v0.13.0] - 2026-02-19
+## [android-sdk-v0.16.0] - 2026-03-26
 
 ### 🚀 Features
 
@@ -17,6 +17,7 @@
 - Setup cocoapods
 - Add noctua internal sdk xcframework
 - Add per-row event storage for unlimited event tracking
+- Fix iOS heartbeat, add tests, example app, and CI pipeline fixes
 
 ### 🐛 Bug Fixes
 
@@ -39,6 +40,7 @@
 
 - Bump sdk version to 0.11.0
 - Bump version manually
+- Update iOS XCFramework artifacts [skip ci]
 
 ### 🚜 Refactor
 
@@ -46,6 +48,7 @@
 - Rename gg.noctua.analytics to gg.noctua.internal
 - Project id
 - Namespace to com.noctuagames.labs.sdk.utils
+- Move version to gradle.properties, add sandbox-aware logging, fix iOS CI
 
 ### ⚙️ Miscellaneous Tasks
 
