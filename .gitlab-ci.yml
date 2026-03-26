@@ -144,6 +144,7 @@ publish-android-sdk:
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="android-sdk-v${SDK_VERSION}"
     - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
+    - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
     - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
     - git push github HEAD:main --follow-tags -f
