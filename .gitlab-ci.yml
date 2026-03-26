@@ -6,16 +6,8 @@ stages:
   - release
   - publish
 
-# Helper function: read sdk.version from gradle.properties
-# Usage: source .ci-helpers.sh && get_sdk_version → sets $SDK_VERSION
-# Inline: SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
-
-.bump-version:
-  image:
-    name: alpine/git
-    entrypoint: [""]
+.git-setup:
   before_script:
-    - apk add git-cliff sed
     - git config --global user.email "gitlab-ci@noctua.gg"
     - git config --global user.name "Noctua Gitlab CI"
     - git fetch origin --tags
@@ -32,8 +24,14 @@ test-android-sdk:
   script:
     - bash gradlew check
 
-bump-version-android-sdk:
-  extends: .bump-version
+# ==================== Shared Version Bump ====================
+# One job bumps sdk.version for BOTH platforms (they share gradle.properties).
+# Uses simple semver minor increment — no git-cliff for version computation.
+
+bump-version-sdk:
+  image:
+    name: alpine/git
+    entrypoint: [""]
   stage: bump-version
   allow_failure: false
   rules:
@@ -44,25 +42,34 @@ bump-version-android-sdk:
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
+  before_script:
+    - apk add sed
+    - git config --global user.email "gitlab-ci@noctua.gg"
+    - git config --global user.name "Noctua Gitlab CI"
+    - git fetch origin --tags
+    - git checkout -B $CI_COMMIT_BRANCH origin/$CI_COMMIT_BRANCH
   script:
-    - NEW_VERSION_TAG=$(git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bumped-version)
-    - NEW_VERSION=$(echo $NEW_VERSION_TAG | sed -r "s/android-sdk-v(.*)/\1/")
+    # Read current version and bump minor: 0.15.0 → 0.16.0
+    - CURRENT=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
+    - MAJOR=$(echo $CURRENT | cut -d. -f1)
+    - MINOR=$(echo $CURRENT | cut -d. -f2)
+    - PATCH=$(echo $CURRENT | cut -d. -f3)
+    - NEW_MINOR=$((MINOR + 1))
+    - NEW_VERSION="${MAJOR}.${NEW_MINOR}.0"
+    - echo "Bumping version from $CURRENT to $NEW_VERSION"
     - sed -i "s/^sdk\.version=.*/sdk.version=$NEW_VERSION/" gradle.properties
-    - if [ -n "$(git diff --name-only HEAD -- ./gradle.properties)" ]; then
-      echo "Bumping version to $NEW_VERSION";
-      git add gradle.properties;
-      git commit -m "bump version to $NEW_VERSION [skip ci]";
-      git pull --rebase origin $CI_COMMIT_BRANCH;
-      git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip;
-      else
-      echo "No version bump required";
-      fi
+    - git add gradle.properties
+    - git commit -m "bump version to $NEW_VERSION [skip ci]"
+    - git pull --rebase origin $CI_COMMIT_BRANCH
+    - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
+
+# ==================== Android SDK Pipeline ====================
 
 deploy-android-sdk:
   image: cimg/android:2024.07.1
   stage: deploy
   needs:
-    - job: bump-version-android-sdk
+    - job: bump-version-sdk
       optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
@@ -78,7 +85,9 @@ deploy-android-sdk:
     - bash gradlew :sdk:publishAllPublicationsToGitLabRepository --no-configuration-cache
 
 release-android-sdk:
-  extends: .bump-version
+  image:
+    name: alpine/git
+    entrypoint: [""]
   stage: release
   needs:
     - job: deploy-android-sdk
@@ -91,15 +100,20 @@ release-android-sdk:
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
+  before_script:
+    - apk add git-cliff sed
+    - git config --global user.email "gitlab-ci@noctua.gg"
+    - git config --global user.name "Noctua Gitlab CI"
+    - git fetch origin --tags
+    - git checkout -B $CI_COMMIT_BRANCH origin/$CI_COMMIT_BRANCH
   script:
-    - git fetch --tags
-    - git checkout origin/$CI_COMMIT_BRANCH
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="android-sdk-v${SDK_VERSION}"
     - git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bump > CHANGELOG.md
     - git add CHANGELOG.md
     - git commit -m "Release $NEW_VERSION_TAG"
     - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
+    - git pull --rebase origin $CI_COMMIT_BRANCH
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
 
 publish-android-sdk:
@@ -138,38 +152,12 @@ publish-android-sdk:
 
 # ==================== iOS SDK Pipeline ====================
 
-bump-version-ios-sdk:
-  extends: .bump-version
-  stage: bump-version
-  allow_failure: false
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - sdk/**
-      when: manual
-  variables:
-    GIT_STRATEGY: fetch
-    GIT_DEPTH: 0
-  script:
-    - NEW_VERSION_TAG=$(git-cliff --repository "." --include-path "sdk/**" --tag-pattern "ios-sdk-v.*" --bumped-version)
-    - NEW_VERSION=$(echo $NEW_VERSION_TAG | sed -r "s/ios-sdk-v(.*)/\1/")
-    - sed -i "s/^sdk\.version=.*/sdk.version=$NEW_VERSION/" gradle.properties
-    - if [ -n "$(git diff --name-only HEAD -- ./gradle.properties)" ]; then
-      echo "Bumping iOS version to $NEW_VERSION";
-      git add gradle.properties;
-      git commit -m "bump iOS version to $NEW_VERSION [skip ci]";
-      git pull --rebase origin $CI_COMMIT_BRANCH;
-      git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip;
-      else
-      echo "No version bump required";
-      fi
-
 build-ios-sdk:
   stage: build
   tags:
     - macmini
   needs:
-    - job: bump-version-ios-sdk
+    - job: bump-version-sdk
       optional: true
   allow_failure: false
   rules:
@@ -182,7 +170,7 @@ build-ios-sdk:
     GIT_DEPTH: 0
   script:
     - git fetch origin
-    - git checkout origin/$CI_COMMIT_BRANCH
+    - git checkout -B $CI_COMMIT_BRANCH origin/$CI_COMMIT_BRANCH
     - ./gradlew podPublishReleaseXCFramework
     - cd sdk/ios-sdk/release
     - zip -r NoctuaInternalSDK.xcframework.zip NoctuaInternalSDK.xcframework
@@ -193,6 +181,7 @@ build-ios-sdk:
         git config user.email "gitlab-ci@noctua.gg"
         git config user.name "Noctua Gitlab CI"
         git commit -m "build: update iOS XCFramework artifacts [skip ci]"
+        git pull --rebase origin $CI_COMMIT_BRANCH
         git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH -o ci.skip
       else
         echo "No changes to iOS XCFramework artifacts"
@@ -218,7 +207,7 @@ release-ios-sdk:
     - git config --global user.name "Noctua Gitlab CI"
   script:
     - git fetch origin --tags
-    - git checkout origin/$CI_COMMIT_BRANCH
+    - git checkout -B $CI_COMMIT_BRANCH origin/$CI_COMMIT_BRANCH
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
     - echo "Releasing $NEW_VERSION_TAG"
@@ -231,6 +220,7 @@ release-ios-sdk:
         git commit -m "Release $NEW_VERSION_TAG"
       fi
     - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
+    - git pull --rebase origin $CI_COMMIT_BRANCH
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
 
 publish-ios-sdk:
