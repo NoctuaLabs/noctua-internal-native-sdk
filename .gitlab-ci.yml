@@ -18,6 +18,7 @@ stages:
     - apk add git-cliff sed
     - git config --global user.email "gitlab-ci@noctua.gg"
     - git config --global user.name "Noctua Gitlab CI"
+    - git fetch --tags
 
 test-android-sdk:
   image: cimg/android:2024.07.1
