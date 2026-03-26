@@ -18,7 +18,8 @@ stages:
     - apk add git-cliff sed
     - git config --global user.email "gitlab-ci@noctua.gg"
     - git config --global user.name "Noctua Gitlab CI"
-    - git fetch --tags
+    - git fetch origin --tags
+    - git checkout origin/$CI_COMMIT_BRANCH
 
 test-android-sdk:
   image: cimg/android:2024.07.1
