@@ -6,7 +6,7 @@ Pod::Spec.new do |spec|
     spec.authors                  = 'Noctua Labs'
     spec.license                  = { :type => 'MIT', :file => 'LICENSE' }
     spec.summary                  = 'Noctua internal iOS SDK'
-    spec.vendored_frameworks      = 'NoctuaInternalSDK.xcframework'
+    spec.vendored_frameworks      = 'sdk/ios-sdk/release/NoctuaInternalSDK.xcframework'
     spec.libraries                = 'c++'
     spec.ios.deployment_target    = '14.0'
                 
