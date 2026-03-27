@@ -1,4 +1,4 @@
-## [android-sdk-v0.16.0] - 2026-03-26
+## [android-sdk-v0.16.0] - 2026-03-27
 
 ### 🚀 Features
 
@@ -18,6 +18,7 @@
 - Add noctua internal sdk xcframework
 - Add per-row event storage for unlimited event tracking
 - Fix iOS heartbeat, add tests, example app, and CI pipeline fixes
+- Add iOS example app, UI tests, and CLAUDE.md
 
 ### 🐛 Bug Fixes
 
@@ -40,6 +41,7 @@
 
 - Bump sdk version to 0.11.0
 - Bump version manually
+- Update iOS XCFramework artifacts [skip ci]
 - Update iOS XCFramework artifacts [skip ci]
 
 ### 🚜 Refactor
