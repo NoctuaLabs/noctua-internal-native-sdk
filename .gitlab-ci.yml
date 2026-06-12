@@ -43,25 +43,27 @@ bump-version-sdk:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
   before_script:
-    - apk add sed
+    - apk add git-cliff sed
     - git config --global user.email "gitlab-ci@noctua.gg"
     - git config --global user.name "Noctua Gitlab CI"
     - git fetch origin --tags
     - git checkout -B $CI_COMMIT_BRANCH origin/$CI_COMMIT_BRANCH
   script:
-    # Read current version and bump minor: 0.15.0 → 0.16.0
-    - CURRENT=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
-    - MAJOR=$(echo $CURRENT | cut -d. -f1)
-    - MINOR=$(echo $CURRENT | cut -d. -f2)
-    - PATCH=$(echo $CURRENT | cut -d. -f3)
-    - NEW_MINOR=$((MINOR + 1))
-    - NEW_VERSION="${MAJOR}.${NEW_MINOR}.0"
-    - echo "Bumping version from $CURRENT to $NEW_VERSION"
+    - NEW_VERSION_TAG=$(git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bumped-version)
+    - NEW_VERSION=$(echo $NEW_VERSION_TAG | sed -r "s/android-sdk-v(.*)/\1/")
+    - echo "Bumping version to $NEW_VERSION"
     - sed -i "s/^sdk\.version=.*/sdk.version=$NEW_VERSION/" gradle.properties
-    - git add gradle.properties
-    - git commit -m "bump version to $NEW_VERSION [skip ci]"
-    - git pull --rebase origin $CI_COMMIT_BRANCH
-    - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
+    - sed -i "s/spec\.version\s*=\s*'[^']*'/spec.version                  = '$NEW_VERSION'/" sdk/NoctuaInternalSDK.podspec
+    - REMOTE_URL="https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git"
+    - if [ -n "$(git diff --name-only HEAD -- gradle.properties)" ]; then
+        git add gradle.properties sdk/NoctuaInternalSDK.podspec;
+        git commit -m "bump version to $NEW_VERSION [skip ci]";
+        git fetch "$REMOTE_URL" $CI_COMMIT_BRANCH;
+        git rebase FETCH_HEAD;
+        git push "$REMOTE_URL" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip;
+      else
+        echo "No version bump required";
+      fi
 
 # ==================== Android SDK Pipeline ====================
 
@@ -144,12 +146,10 @@ publish-android-sdk:
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="android-sdk-v${SDK_VERSION}"
     - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
-    - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
+    # Token inline in the push URL — never persisted in the (shared-runner) global git config
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
-    - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
-    - git push github HEAD:main --follow-tags -f
+    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main --follow-tags -f
     - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar"
-    - git remote remove github
 
 # ==================== iOS SDK Pipeline ====================
 
@@ -242,17 +242,20 @@ publish-ios-sdk:
   script:
     - git fetch --tags
     - git checkout origin/$CI_COMMIT_BRANCH
+    # Global helper is needed so `pod repo add/push` can auth to the private Specs repo;
+    # it is removed in after_script so it never outlives the job on the shared runner.
     - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
     # Push to GitHub first so the tag is available for CocoaPods validation
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
-    - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
-    - git push github HEAD:main --follow-tags -f
+    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main --follow-tags -f
     # Publish podspec to CocoaPods private repo (tag now exists on GitHub)
     - pod repo add noctua-specs https://github.com/NoctuaLabs/Specs.git 2>/dev/null || pod repo update noctua-specs
     - pod repo push noctua-specs sdk/ios-sdk/release/NoctuaInternalSDK.podspec --allow-warnings
     # Create GitHub release with XCFramework artifact
     - echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
     - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip"
-    - git remote remove github
+  after_script:
+    # Runs even on failure: never leave the token-bearing helper on the shared runner
+    - git config --global --unset credential.helper || true

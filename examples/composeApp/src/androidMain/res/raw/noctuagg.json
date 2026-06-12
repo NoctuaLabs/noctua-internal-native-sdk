@@ -2,7 +2,7 @@
   "clientId": "1-e724f5a9e6f1",
   "gameId": 1,
   "noctua": {
-    "sentryDsnUrl": "https://4809b03b8d2d48e1865b61c4f7e2dc8c@app.glitchtip.com/9229",
+    "sentryDsnUrl": "https://YOUR_GLITCHTIP_KEY@app.glitchtip.com/YOUR_PROJECT_ID",
     "sandboxEnabled": true,
     "offlineFirstEnabled": true,
     "welcomeToastDisabled": false,
@@ -19,7 +19,7 @@
   "adjust": {
     "android": {
       "environment": "sandbox",
-      "appToken": "kg7l0jhuem80",
+      "appToken": "YOUR_ADJUST_APP_TOKEN",
       "customEventDisabled": false,
       "eventMap": {
         "Download_Game": "3uglyi",
@@ -36,7 +36,7 @@
     },
     "ios": {
       "environment": "sandbox",
-      "appToken": "kg7l0jhuem80",
+      "appToken": "YOUR_ADJUST_APP_TOKEN",
       "customEventDisabled": false,
       "eventMap": {
         "Download_Game": "3uglyi",
@@ -62,15 +62,15 @@
   },
   "facebook": {
     "android": {
-      "appId": "807936677546640",
-      "clientToken": "5eb9cb06333460b31c60e484676110a0",
+      "appId": "YOUR_FACEBOOK_APP_ID",
+      "clientToken": "YOUR_FACEBOOK_CLIENT_TOKEN",
       "displayName": "Noctua Sample App",
       "enableDebug": true,
       "customEventDisabled": false
     },
     "ios": {
-      "appId": "807936677546640",
-      "clientToken": "5eb9cb06333460b31c60e484676110a0",
+      "appId": "YOUR_FACEBOOK_APP_ID",
+      "clientToken": "YOUR_FACEBOOK_CLIENT_TOKEN",
       "displayName": "Noctua Sample App",
       "enableDebug": true,
       "customEventDisabled": false

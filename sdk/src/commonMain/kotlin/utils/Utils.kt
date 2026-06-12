@@ -18,6 +18,12 @@ expect suspend fun isNetworkAvailable(): Boolean
 
 expect fun loadAppConfig(): NoctuaConfig
 
+/**
+ * Releases platform-specific resources started during init (e.g. the iOS
+ * lifecycle observer). No-op on platforms without such resources.
+ */
+expect fun disposePlatformLifecycle()
+
 enum class PlatformType {
     playstore, appstore, direct
 }

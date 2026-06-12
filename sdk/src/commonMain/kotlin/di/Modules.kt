@@ -19,7 +19,14 @@ expect val platformModule: Module
 
 val sharedModule = module {
 
-    single { HttpClientFactory.create(get()) }
+    single {
+        HttpClientFactory.create(
+            engine = get(),
+            // Resolving the config here also guarantees AppLogger.enabled is set
+            // before the client is built. Logging is sandbox-only — see HttpClientFactory.
+            verboseLogging = get<NoctuaConfig>().noctua?.sandboxEnabled == true
+        )
+    }
 
     single {
         get<DatabaseFactory>().create()
@@ -38,11 +45,15 @@ val sharedModule = module {
             // Enable verbose logging only when sandbox mode is active (dev/QA).
             // Production builds (sandboxEnabled = false or absent) only emit errors.
             AppLogger.enabled = config.noctua?.sandboxEnabled == true
-            AppLogger.d(Constants.NOCTUA_TAG, "NoctuaConfig Loaded: ${config.clientId}")
+            // clientId is a credential (sent as X-CLIENT-ID) — never log its value
+            AppLogger.d(Constants.NOCTUA_TAG, "NoctuaConfig loaded successfully")
+            if (config.clientId.isNullOrBlank() || config.gameId == null) {
+                AppLogger.e(Constants.NOCTUA_TAG, "NoctuaConfig is missing clientId/gameId — events will be unattributable")
+            }
             config
         } catch (e: Exception) {
             AppLogger.e(Constants.NOCTUA_TAG, "Failed to load NoctuaConfig: ${e.message}")
-            NoctuaConfig(null, null, null, null, null, null)
+            NoctuaConfig()
         }
     }
 
@@ -54,7 +65,9 @@ val sharedModule = module {
         )
     }
 
-    factory {
+    // single, not factory: the presenter owns the CoroutineScope, SessionTracker,
+    // and session state — a second instance would run a disconnected session.
+    single {
         NoctuaInternalPresenter(
             get(),
             get(),

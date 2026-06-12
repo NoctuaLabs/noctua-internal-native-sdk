@@ -15,6 +15,25 @@ internal class FakeEventDao : EventDao {
         return events.toList()
     }
 
+    override suspend fun getBatch(limit: Int): List<EventEntity> {
+        return events.sortedBy { it.id }.take(limit)
+    }
+
+    override suspend fun deleteByIds(ids: List<Long>): Int {
+        val before = events.size
+        events.removeAll { it.id in ids }
+        return before - events.size
+    }
+
+    override suspend fun getCount(): Int = events.size
+
+    override suspend fun trimToSize(keep: Int): Int {
+        val keepIds = events.sortedByDescending { it.id }.take(keep).map { it.id }.toSet()
+        val before = events.size
+        events.removeAll { it.id !in keepIds }
+        return before - events.size
+    }
+
     override suspend fun deleteAll() {
         events.clear()
     }

@@ -4,6 +4,8 @@ import com.noctuagames.labs.sdk.data.models.NoctuaConfig
 import com.noctuagames.labs.sdk.di.initKoin
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.UIntVar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import platform.Foundation.NSBundle
 import platform.Foundation.NSString
@@ -31,6 +33,11 @@ fun initKoinManually() {
 }
 actual object AppContext
 
+actual fun disposePlatformLifecycle() {
+    lifecycleObserver?.stopObserving()
+    lifecycleObserver = null
+}
+
 @OptIn(ExperimentalForeignApi::class)
 actual fun loadAppConfig(): NoctuaConfig {
     val filePath = NSBundle.mainBundle.pathForResource("noctuagg", "json")
@@ -43,7 +50,9 @@ actual fun loadAppConfig(): NoctuaConfig {
     ) ?: throw IllegalArgumentException("Failed to read noctuagg.json")
 
     val json = Json {
-        ignoreUnknownKeys = true
+        ignoreUnknownKeys = true   // tolerate extra keys
+        coerceInputValues = true   // explicit null on a non-null-with-default → use default
+        isLenient = true
     }
 
     return json.decodeFromString(NoctuaConfig.serializer(), content)
@@ -54,19 +63,24 @@ actual fun getPlatformType(): String {
     return PlatformType.appstore.name
 }
 
+// SCNetworkReachabilityGetFlags can block (synchronous DNS on first use), so
+// run it off the caller's dispatcher. Dispatchers.IO is unavailable on Native;
+// Default is the correct choice here.
 @OptIn(ExperimentalForeignApi::class)
-actual suspend fun isNetworkAvailable(): Boolean = memScoped {
-    val reachability = SCNetworkReachabilityCreateWithName(null, "www.google.com")
-        ?: return false
+actual suspend fun isNetworkAvailable(): Boolean = withContext(Dispatchers.Default) {
+    memScoped {
+        val reachability = SCNetworkReachabilityCreateWithName(null, "www.google.com")
+            ?: return@memScoped false
 
-    val flagsVar = alloc<UIntVar>()
-    val gotFlags = SCNetworkReachabilityGetFlags(reachability, flagsVar.ptr)
+        val flagsVar = alloc<UIntVar>()
+        val gotFlags = SCNetworkReachabilityGetFlags(reachability, flagsVar.ptr)
 
-    if (!gotFlags) return false
+        if (!gotFlags) return@memScoped false
 
-    val flags = flagsVar.value.toInt()
-    val reachable = flags and kSCNetworkFlagsReachable.toInt() != 0
-    val connectionRequired = flags and kSCNetworkFlagsConnectionRequired.toInt() != 0
+        val flags = flagsVar.value.toInt()
+        val reachable = flags and kSCNetworkFlagsReachable.toInt() != 0
+        val connectionRequired = flags and kSCNetworkFlagsConnectionRequired.toInt() != 0
 
-    return reachable && !connectionRequired
+        reachable && !connectionRequired
+    }
 }

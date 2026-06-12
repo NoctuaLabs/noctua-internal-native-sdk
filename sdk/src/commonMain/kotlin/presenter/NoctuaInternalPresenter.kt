@@ -11,38 +11,54 @@ import com.noctuagames.labs.sdk.utils.AppLogger
 import com.noctuagames.labs.sdk.utils.Constants
 import com.noctuagames.labs.sdk.utils.DeviceUtils
 import com.noctuagames.labs.sdk.utils.ExperimentManager
+import com.noctuagames.labs.sdk.utils.Result
 import com.noctuagames.labs.sdk.utils.SessionEventSink
 import com.noctuagames.labs.sdk.utils.SessionTracker
 import com.noctuagames.labs.sdk.utils.SessionTrackerConfig
 import com.noctuagames.labs.sdk.utils.additionalParams
 import com.noctuagames.labs.sdk.utils.mapToJsonString
-import com.noctuagames.labs.sdk.utils.onError
-import com.noctuagames.labs.sdk.utils.onSuccess
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.put
+import kotlin.concurrent.Volatile
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class NoctuaInternalPresenter(
     private val deviceUtils: DeviceUtils,
     private val noctuaConfig: NoctuaConfig,
     private val remote: RemoteNoctuaInternal,
     private val eventDao: EventDao,
-    private val externalEventDao: ExternalEventDao
+    private val externalEventDao: ExternalEventDao,
+    // Single-threaded so DB read-modify-write sequences never run in parallel.
+    dispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(1),
+    private val isConnected: suspend () -> Boolean = { NetworkStatusProvider.isConnected() }
 ) : SessionEventSink {
     private var sessionTracker: SessionTracker? = null
-    private val globalExtraParams = mutableMapOf<String, Any>()
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    @Volatile
+    private var globalExtraParams: Map<String, Any> = emptyMap()
+
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
+    private val flushMutex = Mutex()
 
     init {
-
-        AppLogger.d(Constants.NOCTUA_TAG, "NoctuaConfig : ${noctuaConfig.clientId}")
-
         sessionTracker = SessionTracker(
             config = SessionTrackerConfig(),
-            eventSink = this
+            eventSink = this,
+            userEngagementEnabled = noctuaConfig.noctua?.nativeInternalTrackerEnabled == true
         )
 
         // Auto-start the first session so heartbeat fires on all platforms
@@ -57,20 +73,26 @@ internal class NoctuaInternalPresenter(
 
     fun saveExternalEvents(jsonString: String) {
         scope.launch {
-            externalEventDao.insert(ExternalEventEntity(eventJson = jsonString))
+            runCatchingNonFatal("saveExternalEvents") {
+                externalEventDao.insert(ExternalEventEntity(eventJson = jsonString))
+            }
         }
     }
 
     fun getExternalEvents(onResult: (List<String>) -> Unit) {
         scope.launch {
-            val eventList = externalEventDao.getAll().map { it.eventJson }
+            val eventList = runCatchingNonFatal("getExternalEvents") {
+                externalEventDao.getAll().map { it.eventJson }
+            } ?: emptyList()
             onResult(eventList)
         }
     }
 
     fun deleteExternalEvents() {
         scope.launch {
-            externalEventDao.deleteAll()
+            runCatchingNonFatal("deleteExternalEvents") {
+                externalEventDao.deleteAll()
+            }
         }
     }
 
@@ -78,36 +100,59 @@ internal class NoctuaInternalPresenter(
 
     fun insertExternalEvent(eventJson: String) {
         scope.launch {
-            externalEventDao.insertSingle(ExternalEventEntity(eventJson = eventJson))
+            runCatchingNonFatal("insertExternalEvent") {
+                externalEventDao.insertSingle(ExternalEventEntity(eventJson = eventJson))
+            }
         }
     }
 
     fun getExternalEventsBatch(limit: Int, offset: Int, callback: (String) -> Unit) {
         scope.launch {
-            val events = externalEventDao.getBatch(limit, offset)
-            // Return as JSON array of {id, eventJson, createdAt} objects
-            val jsonArray = events.joinToString(",") { e ->
-                """{"id":${e.id},"eventJson":${e.eventJson},"createdAt":${e.createdAt}}"""
-            }
-            callback("[$jsonArray]")
+            val payload = runCatchingNonFatal("getExternalEventsBatch") {
+                val events = externalEventDao.getBatch(limit, offset)
+                // JSON array of {id, eventJson, createdAt}. eventJson is embedded as a
+                // JSON element when it parses, otherwise as an escaped string — manual
+                // interpolation would produce broken JSON for any value containing quotes.
+                buildJsonArray {
+                    events.forEach { e ->
+                        addJsonObject {
+                            put("id", e.id)
+                            put(
+                                "eventJson",
+                                try {
+                                    Json.parseToJsonElement(e.eventJson)
+                                } catch (_: Exception) {
+                                    JsonPrimitive(e.eventJson)
+                                }
+                            )
+                            put("createdAt", e.createdAt)
+                        }
+                    }
+                }.toString()
+            } ?: "[]"
+            callback(payload)
         }
     }
 
     fun deleteExternalEventsByIds(idsJson: String, callback: (Int) -> Unit) {
         scope.launch {
-            // idsJson = "[1,2,3]"
-            val ids = idsJson.removeSurrounding("[", "]")
-                .split(",")
-                .filter { it.isNotBlank() }
-                .map { it.trim().toLong() }
-            val deletedCount = externalEventDao.deleteByIds(ids)
+            val deletedCount = runCatchingNonFatal("deleteExternalEventsByIds") {
+                // idsJson = "[1,2,3]" — non-numeric tokens are skipped instead of crashing
+                val ids = idsJson.removeSurrounding("[", "]")
+                    .split(",")
+                    .mapNotNull { it.trim().toLongOrNull() }
+                if (ids.isEmpty()) 0 else externalEventDao.deleteByIds(ids)
+            } ?: 0
             callback(deletedCount)
         }
     }
 
     fun getExternalEventCount(callback: (Int) -> Unit) {
         scope.launch {
-            callback(externalEventDao.getCount())
+            val count = runCatchingNonFatal("getExternalEventCount") {
+                externalEventDao.getCount()
+            } ?: 0
+            callback(count)
         }
     }
 
@@ -127,8 +172,8 @@ internal class NoctuaInternalPresenter(
         return ExperimentManager.getExperiment()
     }
 
-    fun setGeneralExperiment(experiment: String) {
-        ExperimentManager.setGeneralExperiment(experiment, experiment)
+    fun setGeneralExperiment(key: String, value: String) {
+        ExperimentManager.setGeneralExperiment(key, value)
     }
 
     fun getGeneralExperiment(experimentKey: String) : String {
@@ -150,14 +195,19 @@ internal class NoctuaInternalPresenter(
         }
 
         sessionTracker?.dispose()
+        scope.cancel()
+        // Release the HTTP client's thread pool / connections.
+        runCatchingNonFatal("remote.close") { remote.close() }
     }
 
     fun setSessionExtraParams(params: Map<String, Any>) {
-        globalExtraParams.putAll(params)
+        globalExtraParams = globalExtraParams + params
     }
 
-    private fun clearSessionExtraParams() {
-        globalExtraParams.clear()
+    private fun consumeSessionExtraParams(): Map<String, Any> {
+        val snapshot = globalExtraParams
+        globalExtraParams = emptyMap()
+        return snapshot
     }
 
     /**
@@ -207,14 +257,20 @@ internal class NoctuaInternalPresenter(
             "session_end",
             "session_pause",
             "session_continue",
-            "session_heartbeat"
+            "session_heartbeat",
+            "noctua_user_engagement"
         )
+
+        // Snapshot-and-clear synchronously so a concurrent event can't observe
+        // params meant for this one, and the payload below is built from an
+        // immutable copy.
+        val extraParams = consumeSessionExtraParams()
 
         if (sessionTag.isNotEmpty() && sessionEvents.contains(eventName)) {
             eventPayload["feature_tag"] = sessionTag
 
-            if (globalExtraParams.isNotEmpty()) {
-                eventPayload.putAll(globalExtraParams)
+            if (extraParams.isNotEmpty()) {
+                eventPayload.putAll(extraParams)
             }
         }
 
@@ -234,56 +290,82 @@ internal class NoctuaInternalPresenter(
         val propertiesToJson = mapToJsonString(eventPayload)
 
         scope.launch {
-            val connected = NetworkStatusProvider.isConnected()
-            if (!connected) {
+            runCatchingNonFatal("trackCustomEvent") {
                 eventDao.insert(EventEntity(events = propertiesToJson))
-                clearSessionExtraParams()
-                AppLogger.d(Constants.NOCTUA_TAG, "No internet connection, event $eventName saved locally")
-                return@launch
+
+                val evicted = eventDao.trimToSize(MAX_STORED_EVENTS)
+                if (evicted > 0) {
+                    AppLogger.e(Constants.NOCTUA_TAG, "Event store full, evicted $evicted oldest events")
+                }
+
+                if (!isConnected()) {
+                    AppLogger.d(Constants.NOCTUA_TAG, "No internet connection, event $eventName saved locally")
+                    return@runCatchingNonFatal
+                }
+
+                val pendingCount = eventDao.getCount()
+                AppLogger.d(Constants.NOCTUA_TAG, "Local events count: $pendingCount")
+
+                if (pendingCount > FLUSH_THRESHOLD) {
+                    flushLocalEvents()
+                }
             }
-
-            val localEvents = eventDao.getAll()
-            AppLogger.d(Constants.NOCTUA_TAG, "Local events count: ${localEvents.count()}")
-
-            if (localEvents.count() > 100) {
-                eventDao.insert(EventEntity(events = propertiesToJson))
-                clearSessionExtraParams()
-                flushLocalEvents()
-                return@launch
-            }
-
-            eventDao.insert(EventEntity(events = propertiesToJson))
-            clearSessionExtraParams()
         }
     }
 
-    private fun flushLocalEvents() {
+    internal fun flushLocalEvents() {
         scope.launch {
-            if (!NetworkStatusProvider.isConnected()) {
-                AppLogger.d(Constants.NOCTUA_TAG, "No Internet Connection")
-                return@launch
-            }
+            runCatchingNonFatal("flushLocalEvents") {
+                flushMutex.withLock {
+                    if (!isConnected()) {
+                        AppLogger.d(Constants.NOCTUA_TAG, "No Internet Connection")
+                        return@withLock
+                    }
 
-            val events = eventDao.getAll()
-            if (events.isEmpty()) {
-                AppLogger.d(Constants.NOCTUA_TAG, "No local events")
-                return@launch
-            }
+                    // Bounded batches, deleted by ID only after a confirmed send —
+                    // events inserted while an upload is in flight are never touched,
+                    // and one oversized backlog can't produce a single giant payload.
+                    while (true) {
+                        val batch = eventDao.getBatch(FLUSH_BATCH_SIZE)
+                        if (batch.isEmpty()) {
+                            AppLogger.d(Constants.NOCTUA_TAG, "No local events")
+                            break
+                        }
 
-            val payloadList = events.map { it.events }
-            AppLogger.i(Constants.NOCTUA_TAG, "Total events to send: ${payloadList.size}")
+                        AppLogger.i(Constants.NOCTUA_TAG, "Sending batch of ${batch.size} events")
 
-            val result = remote.sendEvents(payloadList)
-
-            result.onSuccess {
-                AppLogger.d(Constants.NOCTUA_TAG, "Local events successfully delivered")
-                eventDao.deleteAll()
-            }
-
-            result.onError { error ->
-                AppLogger.e(Constants.NOCTUA_TAG, "Local event delivery failed: ${error.name}")
+                        when (val result = remote.sendEvents(batch.map { it.events })) {
+                            is Result.Success -> {
+                                eventDao.deleteByIds(batch.map { it.id })
+                                AppLogger.d(Constants.NOCTUA_TAG, "Batch of ${batch.size} events delivered")
+                            }
+                            is Result.Error -> {
+                                AppLogger.e(Constants.NOCTUA_TAG, "Local event delivery failed: ${result.error.name}")
+                                break
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+
+    // Logs instead of letting the SupervisorJob swallow the failure silently;
+    // callers fall back to a safe default so consumer callbacks always fire.
+    private inline fun <T> runCatchingNonFatal(operation: String, block: () -> T): T? {
+        return try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            AppLogger.e(Constants.NOCTUA_TAG, "$operation failed: ${e.message}")
+            null
+        }
+    }
+
+    private companion object {
+        const val FLUSH_THRESHOLD = 100
+        const val FLUSH_BATCH_SIZE = 100
+        const val MAX_STORED_EVENTS = 2000
     }
 }
-

@@ -10,10 +10,22 @@ import java.net.Socket
 
 actual object AppContext
 
+actual fun disposePlatformLifecycle() {}
+
 actual fun loadAppConfig(): NoctuaConfig {
-    val file = File("src/jvmMain/resources/noctuagg.json")
-    val json = file.readText()
-    return Json.decodeFromString<NoctuaConfig>(json)
+    // Classpath first (works in a packaged JAR), dev-time file path as fallback
+    val json = object {}.javaClass.classLoader
+        ?.getResourceAsStream("noctuagg.json")
+        ?.use { it.bufferedReader().readText() }
+        ?: File("src/jvmMain/resources/noctuagg.json").takeIf { it.exists() }?.readText()
+        ?: throw IllegalArgumentException("noctuagg.json not found on classpath or in src/jvmMain/resources")
+
+    val parser = Json {
+        ignoreUnknownKeys = true   // tolerate extra keys
+        coerceInputValues = true   // explicit null on a non-null-with-default → use default
+        isLenient = true
+    }
+    return parser.decodeFromString<NoctuaConfig>(json)
 }
 
 actual fun getPlatformType(): String {

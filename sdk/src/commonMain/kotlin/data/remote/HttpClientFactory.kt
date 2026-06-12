@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 
 internal object HttpClientFactory {
 
-    fun create(engine: HttpClientEngine): HttpClient {
+    fun create(engine: HttpClientEngine, verboseLogging: Boolean = false): HttpClient {
         return HttpClient(engine) {
             install(ContentNegotiation) {
                 json(
@@ -27,15 +27,21 @@ internal object HttpClientFactory {
                 socketTimeoutMillis = 20_000L
                 requestTimeoutMillis = 20_000L
             }
-            install(Logging) {
-                logger = object : Logger {
-                    override fun log(message: String) {
-                        // AppLogger.d() is a no-op when sandbox is disabled,
-                        // so HTTP details are silently dropped in production.
-                        AppLogger.d(Constants.NOCTUA_TAG, message)
+            // Only installed in sandbox builds. Ktor's Logging plugin buffers the
+            // ENTIRE request body into a StringBuilder before invoking the logger —
+            // even when the logger discards the output — so at LogLevel.ALL/BODY a
+            // large event batch duplicates itself in memory and OOMs low-end devices.
+            // HEADERS never touches the body; credential headers are redacted.
+            if (verboseLogging) {
+                install(Logging) {
+                    logger = object : Logger {
+                        override fun log(message: String) {
+                            AppLogger.d(Constants.NOCTUA_TAG, message)
+                        }
                     }
+                    level = LogLevel.HEADERS
+                    sanitizeHeader { name -> name == "X-CLIENT-ID" || name == "X-DEVICE-ID" }
                 }
-                level = LogLevel.ALL
             }
         }
     }
