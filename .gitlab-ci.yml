@@ -201,7 +201,7 @@ release-ios-sdk:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
-      when: manual
+      when: on_success
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
