@@ -54,9 +54,11 @@ bump-version-sdk:
     - echo "Bumping version to $NEW_VERSION"
     - sed -i "s/^sdk\.version=.*/sdk.version=$NEW_VERSION/" gradle.properties
     - sed -i "s/spec\.version\s*=\s*'[^']*'/spec.version                  = '$NEW_VERSION'/" sdk/NoctuaInternalSDK.podspec
+    - sed -i "s/spec\.version\s*=\s*'[^']*'/spec.version                  = '$NEW_VERSION'/" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
+    - sed -i "s|spec\.source\s*=.*|spec.source                   = { :git => 'https://github.com/NoctuaLabs/noctua-internal-native-sdk.git', :tag => 'ios-sdk-v$NEW_VERSION' }|" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
     - REMOTE_URL="https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git"
     - if [ -n "$(git diff --name-only HEAD -- gradle.properties)" ]; then
-        git add gradle.properties sdk/NoctuaInternalSDK.podspec;
+        git add gradle.properties sdk/NoctuaInternalSDK.podspec sdk/ios-sdk/release/NoctuaInternalSDK.podspec;
         git commit -m "bump version to $NEW_VERSION [skip ci]";
         git fetch "$REMOTE_URL" $CI_COMMIT_BRANCH;
         git rebase FETCH_HEAD;
@@ -212,14 +214,6 @@ release-ios-sdk:
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
     - echo "Releasing $NEW_VERSION_TAG"
-    - |
-      sed -i '' "s/spec.version.*=.*/spec.version                  = '$SDK_VERSION'/" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
-      sed -i '' "s|spec.source.*=.*|spec.source                   = { :git => 'https://github.com/NoctuaLabs/noctua-internal-native-sdk.git', :tag => '$NEW_VERSION_TAG' }|" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
-    - git add sdk/ios-sdk/release/NoctuaInternalSDK.podspec
-    - |
-      if [ -n "$(git diff --cached --name-only)" ]; then
-        git commit -m "Release $NEW_VERSION_TAG"
-      fi
     - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
     - git pull --rebase origin $CI_COMMIT_BRANCH
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
