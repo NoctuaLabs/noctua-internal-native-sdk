@@ -1,7 +1,6 @@
 stages:
   - test
   - bump-version
-  - build
   - deploy
   - release
   - publish
@@ -155,8 +154,8 @@ publish-android-sdk:
 
 # ==================== iOS SDK Pipeline ====================
 
-build-ios-sdk:
-  stage: build
+build-and-publish-ios-sdk:
+  stage: publish
   tags:
     - macmini
   needs:
@@ -171,83 +170,42 @@ build-ios-sdk:
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
-  script:
-    - git fetch origin
+  before_script:
+    - git config --global user.email "gitlab-ci@noctua.gg"
+    - git config --global user.name "Noctua Gitlab CI"
+    - git fetch origin --tags
     - git checkout -B $CI_COMMIT_BRANCH origin/$CI_COMMIT_BRANCH
+  script:
+    # ---- Build XCFramework ----
     - ./gradlew podPublishReleaseXCFramework
     - cd sdk/ios-sdk/release
     - zip -r NoctuaInternalSDK.xcframework.zip NoctuaInternalSDK.xcframework
     - cd "$CI_PROJECT_DIR"
+    # ---- Commit artifacts ----
     - git add sdk/ios-sdk/release/
     - |
       if [ -n "$(git diff --cached --name-only)" ]; then
-        git config user.email "gitlab-ci@noctua.gg"
-        git config user.name "Noctua Gitlab CI"
         git commit -m "build: update iOS XCFramework artifacts [skip ci]"
-        git pull --rebase origin $CI_COMMIT_BRANCH
-        git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH -o ci.skip
       else
         echo "No changes to iOS XCFramework artifacts"
       fi
-
-release-ios-sdk:
-  stage: release
-  tags:
-    - macmini
-  needs:
-    - job: build-ios-sdk
-      optional: true
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - sdk/**
-      when: on_success
-  variables:
-    GIT_STRATEGY: fetch
-    GIT_DEPTH: 0
-  before_script:
-    - git config --global user.email "gitlab-ci@noctua.gg"
-    - git config --global user.name "Noctua Gitlab CI"
-  script:
-    - git fetch origin --tags
-    - git checkout -B $CI_COMMIT_BRANCH origin/$CI_COMMIT_BRANCH
+    # ---- Tag & push to GitLab ----
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
     - echo "Releasing $NEW_VERSION_TAG"
     - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
     - git pull --rebase origin $CI_COMMIT_BRANCH
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
-
-publish-ios-sdk:
-  stage: publish
-  tags:
-    - macmini
-  needs:
-    - job: release-ios-sdk
-      optional: true
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - sdk/**
-      when: on_success
-  variables:
-    GIT_STRATEGY: fetch
-    GIT_DEPTH: 0
-  script:
-    - git fetch --tags
-    - git checkout origin/$CI_COMMIT_BRANCH
+    # ---- Push to GitHub (tag must exist before CocoaPods validation) ----
     # Global helper is needed so `pod repo add/push` can auth to the private Specs repo;
     # it is removed in after_script so it never outlives the job on the shared runner.
     - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
-    - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
-    - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
-    # Push to GitHub first so the tag is available for CocoaPods validation
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
     - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main --follow-tags -f
-    # Publish podspec to CocoaPods private repo (tag now exists on GitHub)
+    # ---- Publish to CocoaPods private repo ----
     - pod repo add noctua-specs https://github.com/NoctuaLabs/Specs.git 2>/dev/null || pod repo update noctua-specs
     - pod repo push noctua-specs sdk/ios-sdk/release/NoctuaInternalSDK.podspec --allow-warnings
-    # Create GitHub release with XCFramework artifact
+    # ---- Create GitHub release with XCFramework zip ----
     - echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
     - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip"
   after_script:
