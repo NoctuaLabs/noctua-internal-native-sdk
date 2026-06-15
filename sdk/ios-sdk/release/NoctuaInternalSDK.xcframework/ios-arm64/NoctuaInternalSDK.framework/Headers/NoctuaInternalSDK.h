@@ -174,7 +174,8 @@ __attribute__((swift_name("NoctuaInternal")))
 - (void)onInternalNoctuaDispose __attribute__((swift_name("onInternalNoctuaDispose()")));
 - (void)saveExternalEventsJsonString:(NSString *)jsonString __attribute__((swift_name("saveExternalEvents(jsonString:)")));
 - (void)setExperimentExperiment:(NSString *)experiment __attribute__((swift_name("setExperiment(experiment:)")));
-- (void)setGeneralExperimentExperiment:(NSString *)experiment __attribute__((swift_name("setGeneralExperiment(experiment:)")));
+- (void)setGeneralExperimentExperiment:(NSString *)experiment __attribute__((swift_name("setGeneralExperiment(experiment:)"))) __attribute__((deprecated("Stores the experiment name as both key and value. Use setGeneralExperiment(key, value) instead.")));
+- (void)setGeneralExperimentKey:(NSString *)key value:(NSString *)value __attribute__((swift_name("setGeneralExperiment(key:value:)")));
 - (void)setSessionExtraParamsParams:(NSDictionary<NSString *, id> *)params __attribute__((swift_name("setSessionExtraParams(params:)")));
 - (void)setSessionTagTag:(NSString *)tag __attribute__((swift_name("setSessionTag(tag:)")));
 - (void)trackCustomEventEventName:(NSString *)eventName properties:(NSDictionary<NSString *, id> *)properties __attribute__((swift_name("trackCustomEvent(eventName:properties:)")));
@@ -348,13 +349,37 @@ __attribute__((swift_name("EventDao")))
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)deleteByIdsIds:(NSArray<NISDKLong *> *)ids completionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("deleteByIds(ids:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)getAllWithCompletionHandler:(void (^)(NSArray<NISDKEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getAll(completionHandler:)")));
 
 /**
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)getBatchLimit:(int32_t)limit completionHandler:(void (^)(NSArray<NISDKEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getBatch(limit:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)getCountWithCompletionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getCount(completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)insertEvent:(NISDKEventEntity *)event completionHandler:(void (^)(NSError * _Nullable))completionHandler __attribute__((swift_name("insert(event:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)trimToSizeKeep:(int32_t)keep completionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("trimToSize(keep:completionHandler:)")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -373,13 +398,37 @@ __attribute__((swift_name("EventDao_Impl")))
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)deleteByIdsIds:(NSArray<NISDKLong *> *)ids completionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("deleteByIds(ids:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)getAllWithCompletionHandler:(void (^)(NSArray<NISDKEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getAll(completionHandler:)")));
 
 /**
  * @note This method converts instances of CancellationException to errors.
  * Other uncaught Kotlin exceptions are fatal.
 */
+- (void)getBatchLimit:(int32_t)limit completionHandler:(void (^)(NSArray<NISDKEventEntity *> * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getBatch(limit:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)getCountWithCompletionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("getCount(completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
 - (void)insertEvent:(NISDKEventEntity *)event completionHandler:(void (^)(NSError * _Nullable))completionHandler __attribute__((swift_name("insert(event:completionHandler:)")));
+
+/**
+ * @note This method converts instances of CancellationException to errors.
+ * Other uncaught Kotlin exceptions are fatal.
+*/
+- (void)trimToSizeKeep:(int32_t)keep completionHandler:(void (^)(NISDKInt * _Nullable, NSError * _Nullable))completionHandler __attribute__((swift_name("trimToSize(keep:completionHandler:)")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -648,14 +697,15 @@ __attribute__((swift_name("NoctuaConfig.Companion")))
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("NoctuaFeatureConfig")))
 @interface NISDKNoctuaFeatureConfig : NISDKBase
-- (instancetype)initWithSentryDsnUrl:(NSString * _Nullable)sentryDsnUrl sandboxEnabled:(NISDKBoolean * _Nullable)sandboxEnabled offlineFirstEnabled:(NISDKBoolean * _Nullable)offlineFirstEnabled welcomeToastDisabled:(NISDKBoolean * _Nullable)welcomeToastDisabled iaaEnabled:(NISDKBoolean * _Nullable)iaaEnabled iapDisabled:(NISDKBoolean * _Nullable)iapDisabled remoteFeatureFlags:(NISDKRemoteFeatureFlags * _Nullable)remoteFeatureFlags __attribute__((swift_name("init(sentryDsnUrl:sandboxEnabled:offlineFirstEnabled:welcomeToastDisabled:iaaEnabled:iapDisabled:remoteFeatureFlags:)"))) __attribute__((objc_designated_initializer));
+- (instancetype)initWithSentryDsnUrl:(NSString * _Nullable)sentryDsnUrl sandboxEnabled:(NISDKBoolean * _Nullable)sandboxEnabled offlineFirstEnabled:(NISDKBoolean * _Nullable)offlineFirstEnabled welcomeToastDisabled:(NISDKBoolean * _Nullable)welcomeToastDisabled iaaEnabled:(NISDKBoolean * _Nullable)iaaEnabled iapDisabled:(NISDKBoolean * _Nullable)iapDisabled nativeInternalTrackerEnabled:(NISDKBoolean * _Nullable)nativeInternalTrackerEnabled remoteFeatureFlags:(NISDKRemoteFeatureFlags * _Nullable)remoteFeatureFlags __attribute__((swift_name("init(sentryDsnUrl:sandboxEnabled:offlineFirstEnabled:welcomeToastDisabled:iaaEnabled:iapDisabled:nativeInternalTrackerEnabled:remoteFeatureFlags:)"))) __attribute__((objc_designated_initializer));
 @property (class, readonly, getter=companion) NISDKNoctuaFeatureConfigCompanion *companion __attribute__((swift_name("companion")));
-- (NISDKNoctuaFeatureConfig *)doCopySentryDsnUrl:(NSString * _Nullable)sentryDsnUrl sandboxEnabled:(NISDKBoolean * _Nullable)sandboxEnabled offlineFirstEnabled:(NISDKBoolean * _Nullable)offlineFirstEnabled welcomeToastDisabled:(NISDKBoolean * _Nullable)welcomeToastDisabled iaaEnabled:(NISDKBoolean * _Nullable)iaaEnabled iapDisabled:(NISDKBoolean * _Nullable)iapDisabled remoteFeatureFlags:(NISDKRemoteFeatureFlags * _Nullable)remoteFeatureFlags __attribute__((swift_name("doCopy(sentryDsnUrl:sandboxEnabled:offlineFirstEnabled:welcomeToastDisabled:iaaEnabled:iapDisabled:remoteFeatureFlags:)")));
+- (NISDKNoctuaFeatureConfig *)doCopySentryDsnUrl:(NSString * _Nullable)sentryDsnUrl sandboxEnabled:(NISDKBoolean * _Nullable)sandboxEnabled offlineFirstEnabled:(NISDKBoolean * _Nullable)offlineFirstEnabled welcomeToastDisabled:(NISDKBoolean * _Nullable)welcomeToastDisabled iaaEnabled:(NISDKBoolean * _Nullable)iaaEnabled iapDisabled:(NISDKBoolean * _Nullable)iapDisabled nativeInternalTrackerEnabled:(NISDKBoolean * _Nullable)nativeInternalTrackerEnabled remoteFeatureFlags:(NISDKRemoteFeatureFlags * _Nullable)remoteFeatureFlags __attribute__((swift_name("doCopy(sentryDsnUrl:sandboxEnabled:offlineFirstEnabled:welcomeToastDisabled:iaaEnabled:iapDisabled:nativeInternalTrackerEnabled:remoteFeatureFlags:)")));
 - (BOOL)isEqual:(id _Nullable)other __attribute__((swift_name("isEqual(_:)")));
 - (NSUInteger)hash __attribute__((swift_name("hash()")));
 - (NSString *)description __attribute__((swift_name("description()")));
 @property (readonly) NISDKBoolean * _Nullable iaaEnabled __attribute__((swift_name("iaaEnabled")));
 @property (readonly) NISDKBoolean * _Nullable iapDisabled __attribute__((swift_name("iapDisabled")));
+@property (readonly) NISDKBoolean * _Nullable nativeInternalTrackerEnabled __attribute__((swift_name("nativeInternalTrackerEnabled")));
 @property (readonly) NISDKBoolean * _Nullable offlineFirstEnabled __attribute__((swift_name("offlineFirstEnabled")));
 @property (readonly) NISDKRemoteFeatureFlags * _Nullable remoteFeatureFlags __attribute__((swift_name("remoteFeatureFlags")));
 @property (readonly) NISDKBoolean * _Nullable sandboxEnabled __attribute__((swift_name("sandboxEnabled")));
@@ -991,6 +1041,7 @@ __attribute__((swift_name("ResultKt")))
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("Utils_iosKt")))
 @interface NISDKUtils_iosKt : NISDKBase
++ (void)disposePlatformLifecycle __attribute__((swift_name("disposePlatformLifecycle()")));
 + (NSString *)getPlatformType __attribute__((swift_name("getPlatformType()")));
 + (void)doInitKoinManually __attribute__((swift_name("doInitKoinManually()")));
 
