@@ -120,7 +120,14 @@ release-android-sdk:
     - NEW_VERSION_TAG="android-sdk-v${SDK_VERSION}"
     - git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --bump > CHANGELOG.md
     - git add CHANGELOG.md
-    - git commit -m "Release $NEW_VERSION_TAG"
+    # Guard against empty commit: if the changelog is unchanged (e.g. the job is
+    # re-run without a version bump) `git commit` would exit 1 and fail the job.
+    - |
+      if [ -n "$(git diff --cached --name-only)" ]; then
+        git commit -m "Release $NEW_VERSION_TAG"
+      else
+        echo "No changelog changes to commit"
+      fi
     - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
     - git pull --rebase origin $CI_COMMIT_BRANCH
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
