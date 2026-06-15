@@ -135,7 +135,7 @@ publish-android-sdk:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
-      when: on_success
+      when: manual
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
@@ -152,12 +152,15 @@ publish-android-sdk:
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="android-sdk-v${SDK_VERSION}"
     - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
-    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main --follow-tags -f
-    # Create GitHub release via API token — no gh CLI needed
-    - RELEASE_JSON=$(python3 -c "import json; print(json.dumps({'tag_name':'$NEW_VERSION_TAG','name':'$NEW_VERSION_TAG','body':open('GithubRelease.md').read()}))")
-    - RELEASE=$(curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/json" --data "$RELEASE_JSON" "https://api.github.com/repos/NoctuaLabs/noctua-internal-native-sdk/releases")
-    - UPLOAD_URL=$(echo "$RELEASE" | python3 -c "import json,sys; print(json.load(sys.stdin)['upload_url'].split('{')[0])")
-    - curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/octet-stream" --data-binary "@./noctua-$NEW_VERSION_TAG.aar" "${UPLOAD_URL}?name=noctua-$NEW_VERSION_TAG.aar"
+    # Following UPM SDK pattern: install gh, auth, setup-git, push via named remote
+    - curl -sS https://webi.sh/gh | sh
+    - source ~/.config/envman/PATH.env
+    - gh auth status >/dev/null 2>&1 || echo "$GITHUB_ACCESS_TOKEN" | gh auth login --with-token
+    - gh auth setup-git
+    - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
+    - git push github HEAD:main --follow-tags -f
+    - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar" --latest
+    - git remote remove github || true
 
 # ==================== iOS SDK Pipeline ====================
 
@@ -173,7 +176,7 @@ build-and-publish-ios-sdk:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - sdk/**
-      when: on_success
+      when: manual
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
@@ -205,29 +208,34 @@ build-and-publish-ios-sdk:
     - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
     - echo "Releasing $NEW_VERSION_TAG"
     - git pull --rebase origin $CI_COMMIT_BRANCH
-    # ---- Set up GitHub credential helper for pod repo push (private Specs repo) ----
-    # Removed in after_script so the token never outlives the job on the shared runner.
-    - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
+    # ---- Set up gh CLI following UPM SDK pattern ----
+    # gh auth setup-git handles credentials for both GitHub pushes and pod repo push
+    # to the private Specs repo (both are github.com). Clean up in after_script so
+    # the token never outlives the job on the shared macmini runner.
+    - curl -sS https://webi.sh/gh | sh
+    - source ~/.config/envman/PATH.env
+    - gh auth status >/dev/null 2>&1 || echo "$GITHUB_ACCESS_TOKEN" | gh auth login --with-token
+    - gh auth setup-git
+    - git remote add github https://github.com/NoctuaLabs/noctua-internal-native-sdk.git || true
     # ---- Push commits to both remotes BEFORE tagging ----
     # Guarantees the xcframework is on GitHub before the tag is created.
     # pod repo push clones from GitHub at the tag — if the tag predates the
     # xcframework commit (e.g. from a previous failed run), CocoaPods can't find it.
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH -o ci.skip
-    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main -f
+    - git push github HEAD:main -f
     # ---- Tag after xcframework commit is confirmed on both remotes ----
     # -f allows retrying the job without manually deleting the tag first
     - git tag -f -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
     - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" "refs/tags/$NEW_VERSION_TAG" -o ci.skip
-    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" "refs/tags/$NEW_VERSION_TAG" -f
+    - git push github "refs/tags/$NEW_VERSION_TAG" -f
     # ---- Publish to CocoaPods private repo ----
     - pod repo add noctua-specs https://github.com/NoctuaLabs/Specs.git 2>/dev/null || pod repo update noctua-specs
     - pod repo push noctua-specs sdk/ios-sdk/release/NoctuaInternalSDK.podspec --allow-warnings
-    # ---- Create GitHub release with XCFramework zip via API token ----
+    # ---- Create GitHub release with XCFramework zip ----
     - echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
-    - RELEASE_JSON=$(python3 -c "import json; print(json.dumps({'tag_name':'$NEW_VERSION_TAG','name':'$NEW_VERSION_TAG','body':open('GithubRelease-ios.md').read()}))")
-    - RELEASE=$(curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/json" --data "$RELEASE_JSON" "https://api.github.com/repos/NoctuaLabs/noctua-internal-native-sdk/releases")
-    - UPLOAD_URL=$(echo "$RELEASE" | python3 -c "import json,sys; print(json.load(sys.stdin)['upload_url'].split('{')[0])")
-    - curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/octet-stream" --data-binary "@sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip" "${UPLOAD_URL}?name=NoctuaInternalSDK.xcframework.zip"
+    - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip" --latest
+    - git remote remove github || true
   after_script:
-    # Runs even on failure: never leave the token-bearing helper on the shared runner
-    - git config --global --unset credential.helper || true
+    # Runs even on failure: log out of gh so the token never lingers on the shared runner
+    - source ~/.config/envman/PATH.env 2>/dev/null || true
+    - gh auth logout --hostname github.com || true
