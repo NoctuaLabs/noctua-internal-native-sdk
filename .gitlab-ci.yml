@@ -149,14 +149,15 @@ publish-android-sdk:
     - cp ./git-cliff-2.4.0/git-cliff /usr/local/bin/
     - chmod +x /usr/local/bin/git-cliff
     - git-cliff --repository "." --include-path "sdk/**" --tag-pattern "android-sdk-v.*" --latest > GithubRelease.md
-    - curl -sS https://webi.sh/gh | sh
-    - source ~/.config/envman/PATH.env
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="android-sdk-v${SDK_VERSION}"
     - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
-    # GITHUB_TOKEN is set in job variables so gh uses it automatically — no explicit login needed
     - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main --follow-tags -f
-    - gh release create $NEW_VERSION_TAG --repo NoctuaLabs/noctua-internal-native-sdk --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar"
+    # Create GitHub release via API token — no gh CLI needed
+    - RELEASE_JSON=$(python3 -c "import json; print(json.dumps({'tag_name':'$NEW_VERSION_TAG','name':'$NEW_VERSION_TAG','body':open('GithubRelease.md').read()}))")
+    - RELEASE=$(curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/json" --data "$RELEASE_JSON" "https://api.github.com/repos/NoctuaLabs/noctua-internal-native-sdk/releases")
+    - UPLOAD_URL=$(echo "$RELEASE" | python3 -c "import json,sys; print(json.load(sys.stdin)['upload_url'].split('{')[0])")
+    - curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/octet-stream" --data-binary "@./noctua-$NEW_VERSION_TAG.aar" "${UPLOAD_URL}?name=noctua-$NEW_VERSION_TAG.aar"
 
 # ==================== iOS SDK Pipeline ====================
 
@@ -204,13 +205,9 @@ build-and-publish-ios-sdk:
     - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
     - echo "Releasing $NEW_VERSION_TAG"
     - git pull --rebase origin $CI_COMMIT_BRANCH
-    # ---- Set up GitHub auth before any push ----
-    # Global helper is needed so `pod repo add/push` can auth to the private Specs repo;
-    # it is removed in after_script so it never outlives the job on the shared runner.
+    # ---- Set up GitHub credential helper for pod repo push (private Specs repo) ----
+    # Removed in after_script so the token never outlives the job on the shared runner.
     - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
-    - curl -sS https://webi.sh/gh | sh
-    - source ~/.config/envman/PATH.env
-    - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
     # ---- Push commits to both remotes BEFORE tagging ----
     # Guarantees the xcframework is on GitHub before the tag is created.
     # pod repo push clones from GitHub at the tag — if the tag predates the
@@ -225,9 +222,12 @@ build-and-publish-ios-sdk:
     # ---- Publish to CocoaPods private repo ----
     - pod repo add noctua-specs https://github.com/NoctuaLabs/Specs.git 2>/dev/null || pod repo update noctua-specs
     - pod repo push noctua-specs sdk/ios-sdk/release/NoctuaInternalSDK.podspec --allow-warnings
-    # ---- Create GitHub release with XCFramework zip ----
+    # ---- Create GitHub release with XCFramework zip via API token ----
     - echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
-    - gh release create $NEW_VERSION_TAG --repo NoctuaLabs/noctua-internal-native-sdk --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip"
+    - RELEASE_JSON=$(python3 -c "import json; print(json.dumps({'tag_name':'$NEW_VERSION_TAG','name':'$NEW_VERSION_TAG','body':open('GithubRelease-ios.md').read()}))")
+    - RELEASE=$(curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/json" --data "$RELEASE_JSON" "https://api.github.com/repos/NoctuaLabs/noctua-internal-native-sdk/releases")
+    - UPLOAD_URL=$(echo "$RELEASE" | python3 -c "import json,sys; print(json.load(sys.stdin)['upload_url'].split('{')[0])")
+    - curl -sf -X POST -H "Authorization: token $GITHUB_ACCESS_TOKEN" -H "Content-Type:application/octet-stream" --data-binary "@sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip" "${UPLOAD_URL}?name=NoctuaInternalSDK.xcframework.zip"
   after_script:
     # Runs even on failure: never leave the token-bearing helper on the shared runner
     - git config --global --unset credential.helper || true
