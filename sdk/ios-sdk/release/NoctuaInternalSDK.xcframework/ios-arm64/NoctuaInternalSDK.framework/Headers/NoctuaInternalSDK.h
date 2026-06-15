@@ -6,7 +6,7 @@
 #import <Foundation/NSString.h>
 #import <Foundation/NSValue.h>
 
-@class NISDKAdjustPlatformConfig, NISDKAdjustPlatformConfigCompanion, NISDKAppContext, NISDKAppLogger, NISDKBuildConfig, NISDKConstants, NISDKDataErrorLocal, NISDKDataErrorRemote, NISDKDeviceUtils, NISDKEventDao_ImplCompanion, NISDKEventEntity, NISDKExternalEventDao_ImplCompanion, NISDKExternalEventEntity, NISDKFacebookPlatformConfig, NISDKFacebookPlatformConfigCompanion, NISDKFirebasePlatformConfig, NISDKFirebasePlatformConfigCompanion, NISDKKoin_coreBeanDefinition<T>, NISDKKoin_coreCallbacks<T>, NISDKKoin_coreExtensionManager, NISDKKoin_coreInstanceFactory<T>, NISDKKoin_coreInstanceFactoryCompanion, NISDKKoin_coreInstanceRegistry, NISDKKoin_coreKind, NISDKKoin_coreKoin, NISDKKoin_coreKoinApplication, NISDKKoin_coreKoinApplicationCompanion, NISDKKoin_coreKoinDefinition<R>, NISDKKoin_coreLevel, NISDKKoin_coreLockable, NISDKKoin_coreLogger, NISDKKoin_coreModule, NISDKKoin_coreParametersHolder, NISDKKoin_corePropertyRegistry, NISDKKoin_coreResolutionContext, NISDKKoin_coreScope, NISDKKoin_coreScopeDSL, NISDKKoin_coreScopeRegistry, NISDKKoin_coreScopeRegistryCompanion, NISDKKoin_coreSingleInstanceFactory<T>, NISDKKotlinArray<T>, NISDKKotlinByteArray, NISDKKotlinByteIterator, NISDKKotlinEnum<E>, NISDKKotlinEnumCompanion, NISDKKotlinException, NISDKKotlinIllegalStateException, NISDKKotlinIntArray, NISDKKotlinIntIterator, NISDKKotlinLazyThreadSafetyMode, NISDKKotlinNothing, NISDKKotlinRuntimeException, NISDKKotlinThrowable, NISDKKotlinx_serialization_coreSerialKind, NISDKKotlinx_serialization_coreSerializersModule, NISDKKotlinx_serialization_jsonClassDiscriminatorMode, NISDKKotlinx_serialization_jsonJson, NISDKKotlinx_serialization_jsonJsonConfiguration, NISDKKotlinx_serialization_jsonJsonDefault, NISDKKotlinx_serialization_jsonJsonElement, NISDKKotlinx_serialization_jsonJsonElementCompanion, NISDKNetworkStatusProvider, NISDKNoctuaConfig, NISDKNoctuaConfigCompanion, NISDKNoctuaDatabase, NISDKNoctuaDatabaseCompanion, NISDKNoctuaDatabaseConstructor, NISDKNoctuaFeatureConfig, NISDKNoctuaFeatureConfigCompanion, NISDKNoctuaInternal, NISDKPlatformAdjustConfig, NISDKPlatformAdjustConfigCompanion, NISDKPlatformFacebookConfig, NISDKPlatformFacebookConfigCompanion, NISDKPlatformFirebaseConfig, NISDKPlatformFirebaseConfigCompanion, NISDKPlatformType, NISDKRemoteFeatureFlags, NISDKRemoteFeatureFlagsCompanion, NISDKResultError<__covariant E>, NISDKResultSuccess<__covariant D>, NISDKRoom_runtimeInvalidationTracker, NISDKRoom_runtimeMigration, NISDKRoom_runtimeRoomDatabase, NISDKRoom_runtimeRoomDatabaseBuilder<T>, NISDKRoom_runtimeRoomDatabaseCallback, NISDKRoom_runtimeRoomDatabaseJournalMode, NISDKRoom_runtimeRoomOpenDelegate, NISDKRoom_runtimeRoomOpenDelegateValidationResult, NISDKSessionTrackerConfig, NISDKStringListTypeConverter;
+@class NISDKAdjustPlatformConfig, NISDKAdjustPlatformConfigCompanion, NISDKAppContext, NISDKAppLogger, NISDKBuildConfig, NISDKConstants, NISDKDataErrorLocal, NISDKDataErrorRemote, NISDKDeviceUtils, NISDKEventDao_ImplCompanion, NISDKEventEntity, NISDKExternalEventDao_ImplCompanion, NISDKExternalEventEntity, NISDKFacebookPlatformConfig, NISDKFacebookPlatformConfigCompanion, NISDKFirebasePlatformConfig, NISDKFirebasePlatformConfigCompanion, NISDKKoin_coreBeanDefinition<T>, NISDKKoin_coreCallbacks<T>, NISDKKoin_coreExtensionManager, NISDKKoin_coreInstanceFactory<T>, NISDKKoin_coreInstanceFactoryCompanion, NISDKKoin_coreInstanceRegistry, NISDKKoin_coreKind, NISDKKoin_coreKoin, NISDKKoin_coreKoinApplication, NISDKKoin_coreKoinApplicationCompanion, NISDKKoin_coreKoinDefinition<R>, NISDKKoin_coreLevel, NISDKKoin_coreLockable, NISDKKoin_coreLogger, NISDKKoin_coreModule, NISDKKoin_coreParametersHolder, NISDKKoin_corePropertyRegistry, NISDKKoin_coreResolutionContext, NISDKKoin_coreScope, NISDKKoin_coreScopeDSL, NISDKKoin_coreScopeRegistry, NISDKKoin_coreScopeRegistryCompanion, NISDKKoin_coreSingleInstanceFactory<T>, NISDKKotlinArray<T>, NISDKKotlinByteArray, NISDKKotlinByteIterator, NISDKKotlinEnum<E>, NISDKKotlinEnumCompanion, NISDKKotlinException, NISDKKotlinIllegalStateException, NISDKKotlinIntArray, NISDKKotlinIntIterator, NISDKKotlinLazyThreadSafetyMode, NISDKKotlinNothing, NISDKKotlinRuntimeException, NISDKKotlinThrowable, NISDKKotlinx_serialization_coreSerialKind, NISDKKotlinx_serialization_coreSerializersModule, NISDKKotlinx_serialization_jsonClassDiscriminatorMode, NISDKKotlinx_serialization_jsonJson, NISDKKotlinx_serialization_jsonJsonConfiguration, NISDKKotlinx_serialization_jsonJsonDefault, NISDKKotlinx_serialization_jsonJsonElement, NISDKKotlinx_serialization_jsonJsonElementCompanion, NISDKNetworkStatusProvider, NISDKNoctuaConfig, NISDKNoctuaConfigCompanion, NISDKNoctuaDatabase, NISDKNoctuaDatabaseCompanion, NISDKNoctuaDatabaseConstructor, NISDKNoctuaFeatureConfig, NISDKNoctuaFeatureConfigCompanion, NISDKNoctuaInternal, NISDKPlatformAdjustConfig, NISDKPlatformAdjustConfigCompanion, NISDKPlatformFacebookConfig, NISDKPlatformFacebookConfigCompanion, NISDKPlatformFirebaseConfig, NISDKPlatformFirebaseConfigCompanion, NISDKPlatformType, NISDKRemoteFeatureFlags, NISDKRemoteFeatureFlagsCompanion, NISDKResultError<__covariant E>, NISDKResultSuccess<__covariant D>, NISDKRoom_runtimeInvalidationTracker, NISDKRoom_runtimeMigration, NISDKRoom_runtimeRoomDatabase, NISDKRoom_runtimeRoomDatabaseBuilder<T>, NISDKRoom_runtimeRoomDatabaseCallback, NISDKRoom_runtimeRoomDatabaseJournalMode, NISDKRoom_runtimeRoomOpenDelegate, NISDKRoom_runtimeRoomOpenDelegateValidationResult, NISDKSandboxState, NISDKSessionTrackerConfig, NISDKStringListTypeConverter;
 
 @protocol NISDKDataError, NISDKError, NISDKEventDao, NISDKExternalEventDao, NISDKKoin_coreKoinComponent, NISDKKoin_coreKoinExtension, NISDKKoin_coreKoinScopeComponent, NISDKKoin_coreQualifier, NISDKKoin_coreScopeCallback, NISDKKotlinAnnotation, NISDKKotlinAutoCloseable, NISDKKotlinComparable, NISDKKotlinCoroutineContext, NISDKKotlinCoroutineContextElement, NISDKKotlinCoroutineContextKey, NISDKKotlinIterator, NISDKKotlinKAnnotatedElement, NISDKKotlinKClass, NISDKKotlinKClassifier, NISDKKotlinKDeclarationContainer, NISDKKotlinLazy, NISDKKotlinx_coroutines_coreCoroutineScope, NISDKKotlinx_coroutines_coreFlow, NISDKKotlinx_coroutines_coreFlowCollector, NISDKKotlinx_serialization_coreCompositeDecoder, NISDKKotlinx_serialization_coreCompositeEncoder, NISDKKotlinx_serialization_coreDecoder, NISDKKotlinx_serialization_coreDeserializationStrategy, NISDKKotlinx_serialization_coreEncoder, NISDKKotlinx_serialization_coreKSerializer, NISDKKotlinx_serialization_coreSerialDescriptor, NISDKKotlinx_serialization_coreSerialFormat, NISDKKotlinx_serialization_coreSerializationStrategy, NISDKKotlinx_serialization_coreSerializersModuleCollector, NISDKKotlinx_serialization_coreStringFormat, NISDKKotlinx_serialization_jsonJsonNamingStrategy, NISDKResult, NISDKRoom_runtimeAutoMigrationSpec, NISDKRoom_runtimeRoomDatabaseConstructor, NISDKRoom_runtimeRoomOpenDelegateMarker, NISDKSqliteSQLiteConnection, NISDKSqliteSQLiteDriver, NISDKSqliteSQLiteStatement;
 
@@ -170,12 +170,16 @@ __attribute__((swift_name("NoctuaInternal")))
 - (NSString *)getGeneralExperimentExperimentKey:(NSString *)experimentKey __attribute__((swift_name("getGeneralExperiment(experimentKey:)")));
 - (NSString *)getSessionTag __attribute__((swift_name("getSessionTag()")));
 - (void)insertExternalEventEventJson:(NSString *)eventJson __attribute__((swift_name("insertExternalEvent(eventJson:)")));
+- (BOOL)isSandboxEnabled __attribute__((swift_name("isSandboxEnabled()")));
 - (void)onInternalNoctuaApplicationPausePauseStatus:(BOOL)pauseStatus __attribute__((swift_name("onInternalNoctuaApplicationPause(pauseStatus:)")));
 - (void)onInternalNoctuaDispose __attribute__((swift_name("onInternalNoctuaDispose()")));
+- (NISDKBoolean * _Nullable)sandboxConfigValue __attribute__((swift_name("sandboxConfigValue()")));
+- (NISDKBoolean * _Nullable)sandboxOverrideValue __attribute__((swift_name("sandboxOverrideValue()")));
 - (void)saveExternalEventsJsonString:(NSString *)jsonString __attribute__((swift_name("saveExternalEvents(jsonString:)")));
 - (void)setExperimentExperiment:(NSString *)experiment __attribute__((swift_name("setExperiment(experiment:)")));
 - (void)setGeneralExperimentExperiment:(NSString *)experiment __attribute__((swift_name("setGeneralExperiment(experiment:)"))) __attribute__((deprecated("Stores the experiment name as both key and value. Use setGeneralExperiment(key, value) instead.")));
 - (void)setGeneralExperimentKey:(NSString *)key value:(NSString *)value __attribute__((swift_name("setGeneralExperiment(key:value:)")));
+- (void)setSandboxEnabledEnabled:(BOOL)enabled __attribute__((swift_name("setSandboxEnabled(enabled:)")));
 - (void)setSessionExtraParamsParams:(NSDictionary<NSString *, id> *)params __attribute__((swift_name("setSessionExtraParams(params:)")));
 - (void)setSessionTagTag:(NSString *)tag __attribute__((swift_name("setSessionTag(tag:)")));
 - (void)trackCustomEventEventName:(NSString *)eventName properties:(NSDictionary<NSString *, id> *)properties __attribute__((swift_name("trackCustomEvent(eventName:properties:)")));
@@ -1000,6 +1004,18 @@ __attribute__((swift_name("ResultSuccess")))
 @end
 
 __attribute__((objc_subclassing_restricted))
+__attribute__((swift_name("SandboxState")))
+@interface NISDKSandboxState : NISDKBase
++ (instancetype)alloc __attribute__((unavailable));
++ (instancetype)allocWithZone:(struct _NSZone *)zone __attribute__((unavailable));
++ (instancetype)sandboxState __attribute__((swift_name("init()")));
+@property (class, readonly, getter=shared) NISDKSandboxState *shared __attribute__((swift_name("shared")));
+- (NISDKBoolean * _Nullable)overrideOrNull __attribute__((swift_name("overrideOrNull()")));
+- (BOOL)resolveConfig:(NISDKBoolean * _Nullable)config __attribute__((swift_name("resolve(config:)")));
+- (void)setOverrideEnabled:(BOOL)enabled __attribute__((swift_name("setOverride(enabled:)")));
+@end
+
+__attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("SessionTrackerConfig")))
 @interface NISDKSessionTrackerConfig : NISDKBase
 - (instancetype)initWithHeartbeatPeriodMs:(int64_t)heartbeatPeriodMs sessionTimeoutMs:(int64_t)sessionTimeoutMs __attribute__((swift_name("init(heartbeatPeriodMs:sessionTimeoutMs:)"))) __attribute__((objc_designated_initializer));
@@ -1014,7 +1030,7 @@ __attribute__((swift_name("SessionTrackerConfig")))
 __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("InitKoinKt")))
 @interface NISDKInitKoinKt : NISDKBase
-+ (void)doInitKoinConfig:(void (^ _Nullable)(NISDKKoin_coreKoinApplication *))config __attribute__((swift_name("doInitKoin(config:)")));
++ (void)doInitKoinSandboxEnabled:(NISDKBoolean * _Nullable)sandboxEnabled config:(void (^ _Nullable)(NISDKKoin_coreKoinApplication *))config __attribute__((swift_name("doInitKoin(sandboxEnabled:config:)")));
 @end
 
 __attribute__((objc_subclassing_restricted))
@@ -1044,6 +1060,7 @@ __attribute__((swift_name("Utils_iosKt")))
 + (void)disposePlatformLifecycle __attribute__((swift_name("disposePlatformLifecycle()")));
 + (NSString *)getPlatformType __attribute__((swift_name("getPlatformType()")));
 + (void)doInitKoinManually __attribute__((swift_name("doInitKoinManually()")));
++ (void)doInitKoinManuallySandboxEnabled:(BOOL)sandboxEnabled __attribute__((swift_name("doInitKoinManually(sandboxEnabled:)")));
 
 /**
  * @note This method converts instances of CancellationException to errors.
