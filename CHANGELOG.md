@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 Versions follow [Semantic Versioning](https://semver.org/).
 
-## [android-sdk-v0.18.0] - 2026-06-15
+## [android-sdk-v0.19.0] - 2026-06-15
 
 ### misc
 
@@ -39,6 +39,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - Ignore unknown keys by @MozeeB
 - Replace manual SQLiteConnection migration with Room @AutoMigration
 - Add defaultValue for created_at column in AutoMigration
+- *(ios)* Set vendored_frameworks to repo-root-relative path by @MozeeB
 
 ### 🚀 Features
 
