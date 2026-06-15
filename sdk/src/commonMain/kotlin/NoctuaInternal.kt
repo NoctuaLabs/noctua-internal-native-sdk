@@ -1,8 +1,10 @@
 package com.noctuagames.labs.sdk
 
+import com.noctuagames.labs.sdk.data.models.NoctuaConfig
 import com.noctuagames.labs.sdk.presenter.NoctuaInternalPresenter
 import com.noctuagames.labs.sdk.utils.AppLogger
 import com.noctuagames.labs.sdk.utils.Constants
+import com.noctuagames.labs.sdk.utils.SandboxState
 import com.noctuagames.labs.sdk.utils.disposePlatformLifecycle
 import org.koin.mp.KoinPlatform.getKoin
 
@@ -21,6 +23,38 @@ object NoctuaInternal {
             )
             null
         }
+
+    /**
+     * Overrides `sandboxEnabled` at runtime, winning over `noctuagg.json`. Works
+     * independently of Koin init, so hosts running their own `Application` (where
+     * `initKoin` is optional) can call this directly. Set it before the first tracked
+     * event / network use for it to apply to HTTP request logging.
+     */
+    fun setSandboxEnabled(enabled: Boolean) {
+        SandboxState.setOverride(enabled)
+        AppLogger.d(Constants.NOCTUA_TAG, "Sandbox override set to $enabled")
+    }
+
+    /**
+     * The raw `sandboxEnabled` value parsed from `noctuagg.json`, ignoring any override.
+     * Null when Koin isn't started or the key is absent. Exposed mainly so callers can
+     * prove the override is winning (compare against [isSandboxEnabled]).
+     */
+    fun sandboxConfigValue(): Boolean? = try {
+        getKoin().get<NoctuaConfig>().noctua?.sandboxEnabled
+    } catch (e: Exception) {
+        null
+    }
+
+    /** The current host override, or null when none has been set. */
+    fun sandboxOverrideValue(): Boolean? = SandboxState.overrideOrNull()
+
+    /**
+     * The effective sandbox flag: a host override wins, otherwise the `noctuagg.json`
+     * value (when Koin is started), otherwise false. When this differs from
+     * [sandboxConfigValue], the override is in effect.
+     */
+    fun isSandboxEnabled(): Boolean = SandboxState.resolve(sandboxConfigValue())
 
     fun saveExternalEvents(jsonString: String) {
         presenter?.saveExternalEvents(jsonString)

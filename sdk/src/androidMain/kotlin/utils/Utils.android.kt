@@ -19,6 +19,17 @@ fun initKoinManually(context: Context) {
     }
 }
 
+/**
+ * Same as [initKoinManually] but with an explicit [sandboxEnabled] override that wins
+ * over `noctuagg.json`. Mirrors the native-sdk entry point: a non-null primitive
+ * [Boolean] (not `Boolean?`) so a C# `bool` marshalled through JNI resolves correctly.
+ */
+fun initKoinManually(context: Context, sandboxEnabled: Boolean) {
+    initKoin(sandboxEnabled = sandboxEnabled) {
+        androidContext(context)
+    }
+}
+
 actual object AppContext {
     private var value: WeakReference<Context?>? = null
 

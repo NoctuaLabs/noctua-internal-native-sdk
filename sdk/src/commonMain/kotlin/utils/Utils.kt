@@ -77,7 +77,9 @@ fun additionalParams(deviceUtils: DeviceUtils, noctuaConfig: NoctuaConfig): Map<
         "game_version" to deviceUtils.gameVersion,
         "country" to deviceUtils.country,
         "ipAddress" to "0.0.0.0",
-        "is_sandbox" to (noctuaConfig.noctua?.sandboxEnabled ?: false),
+        // Host override (SandboxState) wins over noctuagg.json, so a runtime
+        // setSandboxEnabled() is reflected on subsequently-tracked events.
+        "is_sandbox" to SandboxState.resolve(noctuaConfig.noctua?.sandboxEnabled),
         "timestamp" to getCurrentDateTimestamp()
     )
     return eventPayload

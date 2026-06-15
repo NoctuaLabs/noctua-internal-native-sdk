@@ -65,6 +65,18 @@ class ComposeUITest {
     }
 
     @Test
+    fun testSandboxSectionRendersToggle() = runComposeUiTest {
+        setContent {
+            MaterialTheme {
+                SandboxSection(onLog = {})
+            }
+        }
+
+        onNodeWithText("Sandbox").assertIsDisplayed()
+        onNodeWithText("sandboxEnabled override").assertIsDisplayed()
+    }
+
+    @Test
     fun testLogOutputSectionRendersMessages() = runComposeUiTest {
         setContent {
             MaterialTheme {

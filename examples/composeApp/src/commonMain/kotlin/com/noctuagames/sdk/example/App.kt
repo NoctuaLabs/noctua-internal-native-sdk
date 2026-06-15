@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
  *  - [SessionManagementSection] — session pause/resume
  *  - [ExternalEventsSection] — external event storage and querying
  *  - [ExperimentsSection] — experiment and session tag management
+ *  - [SandboxSection] — runtime sandbox override toggle
  *  - [LogOutputSection] — live log of SDK actions
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,6 +63,10 @@ fun App() {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                 ExperimentsSection(onLog = onLog)
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                SandboxSection(onLog = onLog)
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 

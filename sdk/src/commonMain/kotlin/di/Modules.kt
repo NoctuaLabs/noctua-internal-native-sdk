@@ -11,6 +11,7 @@ import com.noctuagames.labs.sdk.presenter.NoctuaInternalPresenter
 import com.noctuagames.labs.sdk.utils.AppLogger
 import com.noctuagames.labs.sdk.utils.Constants
 import com.noctuagames.labs.sdk.utils.DeviceUtils
+import com.noctuagames.labs.sdk.utils.SandboxState
 import com.noctuagames.labs.sdk.utils.loadAppConfig
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -24,7 +25,8 @@ val sharedModule = module {
             engine = get(),
             // Resolving the config here also guarantees AppLogger.enabled is set
             // before the client is built. Logging is sandbox-only — see HttpClientFactory.
-            verboseLogging = get<NoctuaConfig>().noctua?.sandboxEnabled == true
+            // SandboxState applies a host override (if any) over the config value.
+            verboseLogging = SandboxState.resolve(get<NoctuaConfig>().noctua?.sandboxEnabled)
         )
     }
 
@@ -42,17 +44,24 @@ val sharedModule = module {
     single<NoctuaConfig> {
         try {
             val config = loadAppConfig()
-            // Enable verbose logging only when sandbox mode is active (dev/QA).
-            // Production builds (sandboxEnabled = false or absent) only emit errors.
-            AppLogger.enabled = config.noctua?.sandboxEnabled == true
+            // A host override (SandboxState) wins over noctuagg.json. Enable verbose
+            // logging only when sandbox mode is active (dev/QA); production builds
+            // (sandboxEnabled false/absent and no override) only emit errors.
+            val effectiveSandbox = SandboxState.resolve(config.noctua?.sandboxEnabled)
+            AppLogger.enabled = effectiveSandbox
             // clientId is a credential (sent as X-CLIENT-ID) — never log its value
-            AppLogger.d(Constants.NOCTUA_TAG, "NoctuaConfig loaded successfully")
+            AppLogger.d(
+                Constants.NOCTUA_TAG,
+                "NoctuaConfig loaded successfully (sandboxEnabled=$effectiveSandbox, override=${SandboxState.overrideOrNull() ?: "none"})"
+            )
             if (config.clientId.isNullOrBlank() || config.gameId == null) {
                 AppLogger.e(Constants.NOCTUA_TAG, "NoctuaConfig is missing clientId/gameId — events will be unattributable")
             }
             config
         } catch (e: Exception) {
             AppLogger.e(Constants.NOCTUA_TAG, "Failed to load NoctuaConfig: ${e.message}")
+            // Honor a host override even when the config file fails to load.
+            AppLogger.enabled = SandboxState.resolve(null)
             NoctuaConfig()
         }
     }

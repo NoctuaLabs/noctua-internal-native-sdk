@@ -24,7 +24,20 @@ import platform.SystemConfiguration.kSCNetworkFlagsReachable
 private var lifecycleObserver: IOSLifecycleObserver? = null
 
 fun initKoinManually() {
-    initKoin()
+    startWithLifecycle(sandboxOverride = null)
+}
+
+/**
+ * Same as [initKoinManually] but with an explicit [sandboxEnabled] override that wins
+ * over `noctuagg.json`. Mirrors the native-sdk entry point (host resolves sandbox at
+ * runtime and is the source of truth).
+ */
+fun initKoinManually(sandboxEnabled: Boolean) {
+    startWithLifecycle(sandboxOverride = sandboxEnabled)
+}
+
+private fun startWithLifecycle(sandboxOverride: Boolean?) {
+    initKoin(sandboxEnabled = sandboxOverride)
 
     // Start observing iOS lifecycle notifications so that session
     // pause/resume and heartbeat work automatically without requiring
