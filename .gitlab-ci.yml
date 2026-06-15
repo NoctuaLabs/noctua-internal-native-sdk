@@ -156,7 +156,7 @@ publish-android-sdk:
     - cp ./sdk/build/outputs/aar/sdk-release.aar "./noctua-$NEW_VERSION_TAG.aar"
     # GITHUB_TOKEN is set in job variables so gh uses it automatically — no explicit login needed
     - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main --follow-tags -f
-    - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar"
+    - gh release create $NEW_VERSION_TAG --repo NoctuaLabs/noctua-internal-native-sdk --title $NEW_VERSION_TAG --notes-file GithubRelease.md "./noctua-$NEW_VERSION_TAG.aar"
 
 # ==================== iOS SDK Pipeline ====================
 
@@ -227,7 +227,7 @@ build-and-publish-ios-sdk:
     - pod repo push noctua-specs sdk/ios-sdk/release/NoctuaInternalSDK.podspec --allow-warnings
     # ---- Create GitHub release with XCFramework zip ----
     - echo "Release $NEW_VERSION_TAG" > GithubRelease-ios.md
-    - gh release create $NEW_VERSION_TAG --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip"
+    - gh release create $NEW_VERSION_TAG --repo NoctuaLabs/noctua-internal-native-sdk --title $NEW_VERSION_TAG --notes-file GithubRelease-ios.md "sdk/ios-sdk/release/NoctuaInternalSDK.xcframework.zip"
   after_script:
     # Runs even on failure: never leave the token-bearing helper on the shared runner
     - git config --global --unset credential.helper || true
