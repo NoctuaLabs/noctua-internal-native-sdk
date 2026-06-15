@@ -20,9 +20,15 @@ internal class FakeRemoteNoctuaInternal : RemoteNoctuaInternal {
         }
     }
 
+    var closed = false
+    override fun close() {
+        closed = true
+    }
+
     fun reset() {
         shouldSucceed = true
         errorToReturn = DataError.Remote.UNKNOWN
         capturedEvents.clear()
+        closed = false
     }
 }

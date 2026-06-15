@@ -180,6 +180,118 @@ class SessionTrackerTest {
         assertEquals(heartbeatCountAfterDispose, eventSink.countOf("session_heartbeat"))
     }
 
+    // ---- noctua_user_engagement (Unity parity, gated by nativeInternalTrackerEnabled) ----
+
+    @Test
+    fun engagement_disabledByDefault_noEngagementEvents() = runTest {
+        val tracker = SessionTracker(
+            config = SessionTrackerConfig(heartbeatPeriodMs = 60_000, sessionTimeoutMs = 300_000),
+            eventSink = eventSink,
+            coroutineContext = StandardTestDispatcher(testScheduler),
+            timeProvider = timeProvider
+        )
+
+        tracker.onApplicationPause(false) // start
+        tracker.onApplicationPause(true)  // pause
+        tracker.dispose()                 // end
+
+        assertEquals(0, eventSink.countOf("noctua_user_engagement"))
+
+        tracker.dispose()
+    }
+
+    @Test
+    fun engagement_firesBeforeEachSessionPartner_whenEnabled() = runTest {
+        val tracker = SessionTracker(
+            config = SessionTrackerConfig(heartbeatPeriodMs = 60_000, sessionTimeoutMs = 300_000),
+            eventSink = eventSink,
+            userEngagementEnabled = true,
+            coroutineContext = StandardTestDispatcher(testScheduler),
+            timeProvider = timeProvider
+        )
+
+        tracker.onApplicationPause(false) // start
+        tracker.onApplicationPause(true)  // pause
+
+        // Each engagement event immediately precedes its session partner.
+        val names = eventSink.eventNames()
+        assertEquals(
+            listOf(
+                "noctua_user_engagement", "session_start",
+                "noctua_user_engagement", "session_pause"
+            ),
+            names
+        )
+
+        tracker.dispose()
+    }
+
+    @Test
+    fun engagement_start_reportsZeroAndStartLifecycle() = runTest {
+        val tracker = SessionTracker(
+            config = SessionTrackerConfig(),
+            eventSink = eventSink,
+            userEngagementEnabled = true,
+            coroutineContext = StandardTestDispatcher(testScheduler),
+            timeProvider = timeProvider
+        )
+
+        tracker.onApplicationPause(false) // start
+
+        val engagement = eventSink.trackedEvents.first { it.eventName == "noctua_user_engagement" }
+        assertEquals("start", engagement.properties["lifecycle"])
+        assertEquals(0L, engagement.properties["engagement_time_msec"])
+
+        tracker.dispose()
+    }
+
+    @Test
+    fun engagement_pause_reportsForegroundElapsedTime() = runTest {
+        val tracker = SessionTracker(
+            config = SessionTrackerConfig(heartbeatPeriodMs = 60_000, sessionTimeoutMs = 300_000),
+            eventSink = eventSink,
+            userEngagementEnabled = true,
+            coroutineContext = StandardTestDispatcher(testScheduler),
+            timeProvider = timeProvider
+        )
+
+        tracker.onApplicationPause(false) // start (mark = 0)
+        virtualTimeMs += 8_000            // 8s in foreground
+        tracker.onApplicationPause(true)  // pause
+
+        val pauseEngagement = eventSink.trackedEvents
+            .last { it.eventName == "noctua_user_engagement" }
+        assertEquals("pause", pauseEngagement.properties["lifecycle"])
+        assertEquals(8_000L, pauseEngagement.properties["engagement_time_msec"])
+
+        tracker.dispose()
+    }
+
+    @Test
+    fun engagement_resumeAfterBackground_reportsZeroNotBackgroundTime() = runTest {
+        val tracker = SessionTracker(
+            config = SessionTrackerConfig(heartbeatPeriodMs = 60_000, sessionTimeoutMs = 300_000),
+            eventSink = eventSink,
+            userEngagementEnabled = true,
+            coroutineContext = StandardTestDispatcher(testScheduler),
+            timeProvider = timeProvider
+        )
+
+        tracker.onApplicationPause(false) // start
+        tracker.onApplicationPause(true)  // pause
+        virtualTimeMs += 30_000           // 30s in background
+        tracker.onApplicationPause(false) // resume (still within 5min timeout)
+
+        val resumeEngagement = eventSink.trackedEvents
+            .last { it.eventName == "noctua_user_engagement" }
+        assertEquals("foreground", resumeEngagement.properties["lifecycle"])
+        // Background time must NOT count toward engagement.
+        assertEquals(0L, resumeEngagement.properties["engagement_time_msec"])
+        assertTrue(eventSink.hasEvent("session_continue"))
+
+        tracker.dispose()
+    }
+
     @Test
     fun duplicatePause_isIgnored() = runTest {
         val tracker = SessionTracker(

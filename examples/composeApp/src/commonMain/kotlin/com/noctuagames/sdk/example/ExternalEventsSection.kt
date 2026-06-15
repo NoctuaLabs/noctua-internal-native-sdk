@@ -8,9 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.noctuagames.labs.sdk.NoctuaInternal
 
-/**
- * Demonstrates external event storage and batch querying via the Noctua SDK.
- */
 @Composable
 fun ExternalEventsSection(onLog: (String) -> Unit) {
     Text("External Events", style = MaterialTheme.typography.titleMedium)
@@ -36,5 +33,30 @@ fun ExternalEventsSection(onLog: (String) -> Unit) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Text("Get Event Count")
+    }
+
+    Button(
+        onClick = {
+            NoctuaInternal.getExternalEventsBatch(limit = 20, offset = 0) { json ->
+                if (json == "[]") {
+                    onLog("External events: (empty)")
+                } else {
+                    onLog("External events (first 20): $json")
+                }
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Get Events List")
+    }
+
+    Button(
+        onClick = {
+            NoctuaInternal.deleteExternalEvents()
+            onLog("Deleted all external events")
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Delete All External Events")
     }
 }

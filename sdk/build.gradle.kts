@@ -1,4 +1,5 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
@@ -12,6 +13,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     alias(libs.plugins.kotlinCocoapods)
+    alias(libs.plugins.kover)
 
     id("maven-publish")
 }
@@ -161,6 +163,51 @@ kotlin {
             add("kspIosX64", libs.androidx.room.compiler)
             add("kspIosArm64", libs.androidx.room.compiler)
             add("kspDesktop", libs.androidx.room.compiler)
+        }
+    }
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                // Coverage is gated on shared business logic (presenter, session/
+                // experiment tracking, Result, JSON utils, config model). The
+                // exclusions below are code that cannot be exercised by JVM unit
+                // tests: platform `actual` implementations, I/O infrastructure,
+                // the DI graph, and generated code.
+                classes(
+                    // Build-time generated
+                    "com.noctuagames.labs.sdk.BuildConfig",
+                    // Room-generated implementations + constructors
+                    "*_Impl",
+                    "*_Impl\$*",
+                    "*Constructor*",
+                    // DI graph wiring (needs the full platform graph + real DB)
+                    "com.noctuagames.labs.sdk.di.*",
+                    // Public facade — pure Koin delegation, needs the started graph
+                    "com.noctuagames.labs.sdk.NoctuaInternal",
+                    "com.noctuagames.labs.sdk.InternalNoctuaApp",
+                    // Persistence layer (DB, factory, entities, converters, migrations)
+                    "com.noctuagames.labs.sdk.data.database.*",
+                    "com.noctuagames.labs.sdk.data.local.entity.*",
+                    // Network transport / connectivity probe (need a live engine)
+                    "com.noctuagames.labs.sdk.data.remote.*",
+                    // Platform `actual` implementations + trivial holders
+                    "com.noctuagames.labs.sdk.utils.Utils_androidKt*",
+                    "com.noctuagames.labs.sdk.utils.Utils_desktopKt*",
+                    "com.noctuagames.labs.sdk.utils.Utils_iosKt*",
+                    "com.noctuagames.labs.sdk.utils.DeviceUtils",
+                    "com.noctuagames.labs.sdk.utils.AppContext",
+                    "com.noctuagames.labs.sdk.utils.PlatformType"
+                )
+            }
+        }
+        verify {
+            rule {
+                // LINE coverage of the included (testable) code must stay ≥ 70%.
+                minBound(70, CoverageUnit.LINE)
+            }
         }
     }
 }

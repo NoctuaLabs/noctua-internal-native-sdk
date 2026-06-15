@@ -49,4 +49,8 @@ internal class KtorRemoteNoctuaInternal (
             }
         }
     }
+
+    override fun close() {
+        httpClient.close()
+    }
 }

@@ -1,15 +1,21 @@
 package com.noctuagames.labs.sdk.utils
 
+import kotlin.concurrent.Volatile
+
 internal object ExperimentManager {
 
     private const val KEY_CURRENT_EXPERIMENT = "current_experiment"
     private const val KEY_CURRENT_FEATURE = "current_feature"
     private const val KEY_CURRENT_SESSION_ID = "current_session_id"
 
-    private val experimentFlags = mutableMapOf<String, Any?>()
+    // Written from SessionTracker callbacks (Dispatchers.Default) and read from
+    // the presenter's IO scope — an immutable snapshot behind @Volatile avoids
+    // racing a shared mutable map across threads.
+    @Volatile
+    private var experimentFlags: Map<String, Any?> = emptyMap()
 
     private fun <T> setFlag(key: String, value: T) {
-        experimentFlags[key] = value
+        experimentFlags = experimentFlags + (key to value)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -18,7 +24,7 @@ internal object ExperimentManager {
     }
 
     fun clear() {
-        experimentFlags.clear()
+        experimentFlags = emptyMap()
     }
 
     fun setSessionId(sessionId: String) {
