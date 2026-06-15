@@ -61,8 +61,10 @@ data class NoctuaFeatureConfig(
     val welcomeToastDisabled: Boolean? = null,
     val iaaEnabled: Boolean? = null,
     val iapDisabled: Boolean? = null,
-    // Master switch for the native internal tracker. When true, the SDK also
-    // emits noctua_user_engagement paired with each session event.
+    // Master switch for the native internal tracker. When true, the SDK runs
+    // session tracking (incl. noctua_user_engagement paired with each session
+    // event), custom event tracking, and event upload. When false or absent the
+    // native tracker is fully inert; the external event store is unaffected.
     val nativeInternalTrackerEnabled: Boolean? = null,
     val remoteFeatureFlags: RemoteFeatureFlags? = null
 )

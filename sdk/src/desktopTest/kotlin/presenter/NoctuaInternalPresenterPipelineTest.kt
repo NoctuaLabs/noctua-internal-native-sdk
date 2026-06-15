@@ -6,6 +6,7 @@ import com.noctuagames.labs.sdk.data.local.entity.ExternalEventEntity
 import com.noctuagames.labs.sdk.data.models.EventData
 import com.noctuagames.labs.sdk.data.models.EventResponse
 import com.noctuagames.labs.sdk.data.models.NoctuaConfig
+import com.noctuagames.labs.sdk.data.models.NoctuaFeatureConfig
 import com.noctuagames.labs.sdk.data.remote.RemoteNoctuaInternal
 import com.noctuagames.labs.sdk.fakes.FakeEventDao
 import com.noctuagames.labs.sdk.fakes.FakeExternalEventDao
@@ -41,7 +42,11 @@ class NoctuaInternalPresenterPipelineTest {
     private lateinit var externalEventDao: FakeExternalEventDao
     private lateinit var remote: FakeRemoteNoctuaInternal
 
-    private val config = NoctuaConfig(null, null, null, null, null, null)
+    // Tracker enabled: these tests exercise the session/flush/upload pipeline,
+    // which only runs when nativeInternalTrackerEnabled == true.
+    private val config = NoctuaConfig(
+        noctua = NoctuaFeatureConfig(nativeInternalTrackerEnabled = true)
+    )
 
     @BeforeTest
     fun setup() {
@@ -222,6 +227,103 @@ class NoctuaInternalPresenterPipelineTest {
         advanceUntilIdle()
 
         assertTrue(remote.closed, "HTTP client must be closed on dispose")
+    }
+
+    @Test
+    fun trackerEnabled_tracksCustomEvent_storesThenUploadsOnFlush() = runTest {
+        // Shared `config` has nativeInternalTrackerEnabled == true.
+        val presenter = buildPresenter(StandardTestDispatcher(testScheduler))
+        advanceUntilIdle()
+
+        presenter.trackCustomEvent("custom_event", emptyMap())
+        advanceUntilIdle()
+        assertEquals(1, eventDao.count(), "tracker enabled: custom event must be stored")
+
+        presenter.flushLocalEvents()
+        advanceUntilIdle()
+
+        assertTrue(
+            remote.capturedEvents.flatten().any { it.contains("custom_event") },
+            "tracker enabled: stored event must be uploaded on flush"
+        )
+        assertEquals(0, eventDao.count(), "tracker enabled: delivered events are deleted")
+
+        presenter.onInternalNoctuaDispose()
+    }
+
+    @Test
+    fun trackerDisabled_whenFlagAbsent_behavesAsDisabled() = runTest {
+        // noctua == null → nativeInternalTrackerEnabled resolves to false.
+        val absentConfig = NoctuaConfig(null, null, null, null, null, null)
+        eventDao.insert(EventEntity(events = """{"event_name":"preexisting"}"""))
+
+        val presenter = NoctuaInternalPresenter(
+            deviceUtils = DeviceUtils(),
+            noctuaConfig = absentConfig,
+            remote = remote,
+            eventDao = eventDao,
+            externalEventDao = externalEventDao,
+            dispatcher = StandardTestDispatcher(testScheduler),
+            isConnected = { true }
+        )
+        advanceUntilIdle()
+
+        presenter.trackCustomEvent("custom_event", emptyMap())
+        advanceUntilIdle()
+
+        assertEquals(1, eventDao.count(), "absent flag must behave as disabled: nothing tracked or flushed")
+        assertTrue(remote.capturedEvents.isEmpty(), "absent flag must behave as disabled: nothing sent")
+
+        presenter.onInternalNoctuaDispose()
+    }
+
+    @Test
+    fun trackerDisabled_skipsTracking_flushAndUpload_butKeepsExternalStore() = runTest {
+        val disabledConfig = NoctuaConfig(
+            noctua = NoctuaFeatureConfig(nativeInternalTrackerEnabled = false)
+        )
+        // Seed a pre-existing event; init must NOT flush it when the tracker is off.
+        eventDao.insert(EventEntity(events = """{"event_name":"preexisting"}"""))
+
+        val presenter = NoctuaInternalPresenter(
+            deviceUtils = DeviceUtils(),
+            noctuaConfig = disabledConfig,
+            remote = remote,
+            eventDao = eventDao,
+            externalEventDao = externalEventDao,
+            dispatcher = StandardTestDispatcher(testScheduler),
+            isConnected = { true }
+        )
+        advanceUntilIdle()
+
+        assertEquals(1, eventDao.count(), "tracker disabled: init must not upload existing events")
+        assertTrue(remote.capturedEvents.isEmpty(), "tracker disabled: nothing may be sent on init")
+
+        // Custom event tracking is a no-op (neither stored nor uploaded).
+        presenter.trackCustomEvent("custom_event", emptyMap())
+        presenter.trackCustomEventWithRevenue("purchase", emptyMap(), 9.99, "USD")
+        advanceUntilIdle()
+        assertEquals(1, eventDao.count(), "tracker disabled: custom events must not be stored")
+        assertTrue(remote.capturedEvents.isEmpty(), "tracker disabled: custom events must not be sent")
+
+        // An explicit flush is also a no-op.
+        presenter.flushLocalEvents()
+        advanceUntilIdle()
+        assertEquals(1, eventDao.count(), "tracker disabled: explicit flush must not upload")
+        assertTrue(remote.capturedEvents.isEmpty())
+
+        // The external event store is independent of the tracker gate.
+        presenter.insertExternalEvent("""{"e":1}""")
+        advanceUntilIdle()
+        var count = -1
+        presenter.getExternalEventCount { count = it }
+        advanceUntilIdle()
+        assertEquals(1, count, "tracker disabled: external event store must still work")
+
+        // Dispose must still release the transport even though sessionTracker is null.
+        presenter.onInternalNoctuaDispose()
+        advanceUntilIdle()
+        assertTrue(remote.closed, "dispose must close the transport even when the tracker is disabled")
     }
 
     @Test

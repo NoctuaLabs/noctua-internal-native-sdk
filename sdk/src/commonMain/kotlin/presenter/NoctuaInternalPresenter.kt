@@ -54,21 +54,35 @@ internal class NoctuaInternalPresenter(
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private val flushMutex = Mutex()
 
+    // Master switch for the native internal tracker. When false (or absent) the
+    // SDK runs no session tracking, emits no noctua_user_engagement, stores no
+    // custom events, and uploads nothing — the consumer's own tracker is expected
+    // to handle analytics in that case. The external event store is unaffected.
+    private val trackerEnabled = noctuaConfig.noctua?.nativeInternalTrackerEnabled == true
+
     init {
-        sessionTracker = SessionTracker(
-            config = SessionTrackerConfig(),
-            eventSink = this,
-            userEngagementEnabled = noctuaConfig.noctua?.nativeInternalTrackerEnabled == true
-        )
+        if (trackerEnabled) {
+            sessionTracker = SessionTracker(
+                config = SessionTrackerConfig(),
+                eventSink = this,
+                userEngagementEnabled = true
+            )
 
-        // Auto-start the first session so heartbeat fires on all platforms
-        // (especially iOS where no lifecycle observer existed before).
-        // The guard in SessionTracker.onApplicationPause prevents duplicate calls.
-        sessionTracker?.onApplicationPause(false)
+            // Auto-start the first session so heartbeat fires on all platforms
+            // (especially iOS where no lifecycle observer existed before).
+            // The guard in SessionTracker.onApplicationPause prevents duplicate calls.
+            sessionTracker?.onApplicationPause(false)
 
-        flushLocalEvents()
+            flushLocalEvents()
 
-        AppLogger.d(Constants.NOCTUA_TAG, "Internal Noctua SDK is initialized")
+            AppLogger.d(Constants.NOCTUA_TAG, "Internal Noctua SDK is initialized")
+        } else {
+            AppLogger.i(
+                Constants.NOCTUA_TAG,
+                "Native internal tracker disabled (nativeInternalTrackerEnabled is not true); " +
+                    "skipping session tracking and event upload"
+            )
+        }
     }
 
     fun saveExternalEvents(jsonString: String) {
@@ -189,11 +203,8 @@ internal class NoctuaInternalPresenter(
     }
 
     fun onInternalNoctuaDispose() {
-        if (sessionTracker == null) {
-            AppLogger.i(Constants.NOCTUA_TAG, "SessionTracker is null")
-            return
-        }
-
+        // scope + remote always exist (even when the tracker is disabled and
+        // sessionTracker is null), so always release them to avoid a leak.
         sessionTracker?.dispose()
         scope.cancel()
         // Release the HTTP client's thread pool / connections.
@@ -236,6 +247,14 @@ internal class NoctuaInternalPresenter(
         revenue: Double? = null,
         currency: String? = null
     ) {
+        if (!trackerEnabled) {
+            AppLogger.d(
+                Constants.NOCTUA_TAG,
+                "Native internal tracker disabled, skipping event $eventName"
+            )
+            return
+        }
+
         AppLogger.d(Constants.NOCTUA_TAG, "Track Event $eventName")
 
         val eventPayload = mutableMapOf<String, Any>(
@@ -314,6 +333,7 @@ internal class NoctuaInternalPresenter(
     }
 
     internal fun flushLocalEvents() {
+        if (!trackerEnabled) return
         scope.launch {
             runCatchingNonFatal("flushLocalEvents") {
                 flushMutex.withLock {
