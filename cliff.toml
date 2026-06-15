@@ -30,6 +30,8 @@ body = """
 - {% if commit.breaking %}**BREAKING** {% endif %}\
   {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
   {{ commit.message | upper_first }}\
+  {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
+  {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}]({{ commit.remote.pr_url }}){% endif %}\
 {% endfor %}
 {% endfor %}\n
 """
@@ -89,6 +91,10 @@ tag_pattern = "android-sdk-v[0-9]*|ios-sdk-v[0-9]*"
 
 # Sort commits inside sections by oldest/newest.
 sort_commits = "oldest"
+
+[remote.github]
+owner = "NoctuaLabs"
+repo = "noctua-internal-native-sdk"
 
 [bump]
 # Semver bump logic:
