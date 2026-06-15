@@ -192,22 +192,27 @@ build-and-publish-ios-sdk:
       else
         echo "No changes to iOS XCFramework artifacts"
       fi
-    # ---- Sync with remote before tagging so tag points to the pushed commit ----
     - SDK_VERSION=$(grep '^sdk\.version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
     - NEW_VERSION_TAG="ios-sdk-v${SDK_VERSION}"
     - echo "Releasing $NEW_VERSION_TAG"
     - git pull --rebase origin $CI_COMMIT_BRANCH
-    # ---- Tag after rebase so it points to the final HEAD ----
-    - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
-    - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH --follow-tags -o ci.skip
-    # ---- Push to GitHub (tag must exist before CocoaPods validation) ----
+    # ---- Set up GitHub auth before any push ----
     # Global helper is needed so `pod repo add/push` can auth to the private Specs repo;
     # it is removed in after_script so it never outlives the job on the shared runner.
     - git config --global credential.helper "!f() { echo username=oauth2; echo password=$GITHUB_ACCESS_TOKEN; }; f"
     - curl -sS https://webi.sh/gh | sh
     - source ~/.config/envman/PATH.env
     - echo $GITHUB_ACCESS_TOKEN | gh auth login --with-token
-    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main --follow-tags -f
+    # ---- Push commits to both remotes BEFORE tagging ----
+    # Guarantees the xcframework is on GitHub before the tag is created.
+    # pod repo push clones from GitHub at the tag — if the tag predates the
+    # xcframework commit (e.g. from a previous failed run), CocoaPods can't find it.
+    - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" HEAD:$CI_COMMIT_BRANCH -o ci.skip
+    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" HEAD:main -f
+    # ---- Tag after xcframework commit is confirmed on both remotes ----
+    - git tag -a $NEW_VERSION_TAG -m "Release $NEW_VERSION_TAG"
+    - git push "https://$GITLAB_BUILDER_USER:$GITLAB_BUILDER_ACCESS_TOKEN@gitlab.com/evosverse/noctua/noctua-internal-native-sdk.git" "refs/tags/$NEW_VERSION_TAG" -o ci.skip
+    - git push "https://oauth2:${GITHUB_ACCESS_TOKEN}@github.com/NoctuaLabs/noctua-internal-native-sdk.git" "refs/tags/$NEW_VERSION_TAG" -f
     # ---- Publish to CocoaPods private repo ----
     - pod repo add noctua-specs https://github.com/NoctuaLabs/Specs.git 2>/dev/null || pod repo update noctua-specs
     - pod repo push noctua-specs sdk/ios-sdk/release/NoctuaInternalSDK.podspec --allow-warnings
