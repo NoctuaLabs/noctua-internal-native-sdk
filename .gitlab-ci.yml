@@ -180,6 +180,11 @@ build-and-publish-ios-sdk:
   script:
     # ---- Build XCFramework ----
     - ./gradlew podPublishReleaseXCFramework
+    # podPublishReleaseXCFramework regenerates the podspec with vendored_frameworks
+    # relative to the podspec file ('NoctuaInternalSDK.xcframework'). CocoaPods
+    # evaluates this path against the repo root when cloning via :git, so it must
+    # be the full repo-relative path.
+    - sed -i "" "s|'NoctuaInternalSDK.xcframework'|'sdk/ios-sdk/release/NoctuaInternalSDK.xcframework'|" sdk/ios-sdk/release/NoctuaInternalSDK.podspec
     - cd sdk/ios-sdk/release
     - zip -r NoctuaInternalSDK.xcframework.zip NoctuaInternalSDK.xcframework
     - cd "$CI_PROJECT_DIR"
