@@ -61,5 +61,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - Fix iOS heartbeat, add tests, example app, and CI pipeline fixes
 - Add iOS example app, UI tests, and CLAUDE.md by @MozeeB
 - Add user engagement tracking and harden presenter reliability by @MozeeB
+- Gate native tracker entirely on nativeInternalTrackerEnabled
+- Runtime sandboxEnabled override (native-sdk parity)
 
 
